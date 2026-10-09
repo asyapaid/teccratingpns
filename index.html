@@ -1,0 +1,4112 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TeCC Star Rating PNS</title>
+<style>
+/* ── CSS Variables ── */
+:root {
+  --bg: #ffffff;
+  --surface: #f7f8fa;
+  --border: #e5e7eb;
+  --text: #1f2328;
+  --muted: #57606a;
+  --accent: #1e3a5f;
+  --accent2: #2563eb;
+  --gold: #d97706;
+  --gold-light: #fbbf24;
+  --green: #16a34a;
+  --red: #dc2626;
+  --orange: #ea580c;
+  --star-empty: #d1d5db;
+  --nav-bg: #1e3a5f;
+  --nav-text: #e2e8f0;
+  --nav-active: #2563eb;
+  --banner-bg: #1e3a5f;
+  --banner-text: #ffffff;
+  --card-bg: #ffffff;
+  --input-bg: #ffffff;
+  --input-border: #d1d5db;
+  --focus: #2563eb;
+  --hatch: repeating-linear-gradient(45deg, #d1d5db 0px, #d1d5db 2px, transparent 2px, transparent 6px);
+  --radius: 8px;
+  --shadow: 0 1px 3px rgba(0,0,0,.08);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --border: #2d3142;
+    --text: #e2e8f0;
+    --muted: #8b95a8;
+    --accent: #1e3a5f;
+    --accent2: #3b82f6;
+    --nav-bg: #0d1a2e;
+    --nav-text: #cbd5e1;
+    --nav-active: #3b82f6;
+    --banner-bg: #0d1a2e;
+    --card-bg: #1a1d27;
+    --input-bg: #1a1d27;
+    --input-border: #374151;
+    --star-empty: #4b5563;
+    --hatch: repeating-linear-gradient(45deg, #374151 0px, #374151 2px, transparent 2px, transparent 6px);
+  }
+}
+
+/* ── Reset / Base ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 15px; }
+body {
+  font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  font-variant-numeric: tabular-nums;
+}
+a { color: var(--accent2); }
+a:hover { text-decoration: underline; }
+button, select, input, textarea {
+  font-family: inherit;
+  font-size: inherit;
+}
+button { cursor: pointer; }
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* ── Layout ── */
+#app { display: flex; min-height: 100vh; }
+
+/* Side nav */
+#sidenav {
+  width: 200px;
+  min-width: 200px;
+  background: var(--nav-bg);
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+.nav-logo {
+  padding: 18px 16px 14px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.nav-logo-star { color: var(--gold-light); font-size: 22px; }
+.nav-logo-title { color: #fff; font-weight: 700; font-size: 14px; line-height: 1.2; }
+.nav-logo-sub { color: var(--nav-text); font-size: 11px; opacity: .7; }
+.nav-links { padding: 8px 0; flex: 1; }
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  color: var(--nav-text);
+  text-decoration: none;
+  font-size: 14px;
+  border-left: 3px solid transparent;
+  transition: background .15s, border-color .15s;
+  cursor: pointer;
+  background: none;
+  border-right: none;
+  border-top: none;
+  border-bottom: none;
+  width: 100%;
+  text-align: left;
+}
+.nav-link:hover { background: rgba(255,255,255,.07); }
+.nav-link.active {
+  background: rgba(37,99,235,.25);
+  border-left-color: var(--accent2);
+  color: #fff;
+}
+.nav-link svg { flex-shrink: 0; opacity: .75; }
+.nav-link.active svg { opacity: 1; }
+.nav-footer {
+  padding: 12px 16px;
+  color: var(--nav-text);
+  font-size: 11px;
+  opacity: .55;
+  border-top: 1px solid rgba(255,255,255,.08);
+}
+
+/* Main content */
+#main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Top bar */
+#topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 24px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  gap: 12px;
+  flex-wrap: wrap;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+#topbar h1 { font-size: 20px; font-weight: 700; }
+.year-tabs { display: flex; gap: 4px; }
+.year-tab {
+  padding: 5px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background .15s;
+}
+.year-tab.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+.save-indicator {
+  font-size: 12px;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+/* Page content */
+.page { display: none; padding: 24px; }
+.page.active { display: block; }
+
+/* Cards */
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+.card-body { padding: 20px; }
+.card-header {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.card-title { font-size: 15px; font-weight: 700; }
+
+/* ── Element page banner ── */
+.element-banner {
+  background: var(--banner-bg);
+  color: var(--banner-text);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.element-banner-left {}
+.element-banner-label { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; opacity: .7; }
+.element-banner-name { font-size: 20px; font-weight: 800; margin: 2px 0; }
+.element-banner-weight { font-size: 13px; opacity: .75; }
+.element-banner-right { text-align: right; }
+.element-banner-score { font-size: 40px; font-weight: 800; line-height: 1; }
+.element-banner-score-denom { font-size: 14px; opacity: .6; }
+.element-banner-pct { font-size: 13px; opacity: .8; margin-top: 2px; }
+
+/* ── Rubric item card (element pages) ── */
+.elem-rubric-item {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+.elem-rubric-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+.elem-rubric-num {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.elem-rubric-title { font-weight: 700; font-size: 14px; flex: 1; }
+.elem-rubric-max { font-size: 12px; color: var(--muted); white-space: nowrap; }
+
+.elem-rubric-body { padding: 14px 16px; }
+
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+@media (max-width: 500px) {
+  .field-row { grid-template-columns: 1fr; }
+}
+.field-group { display: flex; flex-direction: column; gap: 4px; }
+.field-group label { font-size: 12px; color: var(--muted); font-weight: 500; }
+.field-input {
+  padding: 7px 10px;
+  border: 1px solid var(--input-border);
+  border-radius: 5px;
+  background: var(--input-bg);
+  color: var(--text);
+  width: 100%;
+}
+.field-input:focus { border-color: var(--focus); }
+.field-input.mark-num { font-size: 16px; font-weight: 700; text-align: right; }
+select.field-input { appearance: auto; }
+textarea.field-input { resize: vertical; min-height: 56px; }
+
+.mark-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.mark-bar-track {
+  flex: 1;
+  height: 8px;
+  background: var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.mark-bar-fill { height: 100%; background: var(--accent2); border-radius: 4px; transition: width .3s; }
+.mark-bar-label { font-size: 12px; color: var(--muted); white-space: nowrap; }
+
+/* Upload area (placeholder for stage 3) */
+/* ── Evidence upload ── */
+.upload-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border: 1.5px dashed var(--input-border);
+  border-radius: 6px;
+  background: none;
+  color: var(--accent2);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+  margin-top: 8px;
+}
+.upload-btn:hover { border-color: var(--accent2); background: var(--surface); }
+
+.thumb-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+.thumb-item {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  background: var(--surface);
+  flex-shrink: 0;
+}
+.thumb-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.thumb-item:hover::after {
+  content: '🔍';
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+
+/* ── Image lightbox / modal ── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.75);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+.modal-overlay.hidden { display: none; }
+.modal-box {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  max-width: 720px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 20px;
+  position: relative;
+}
+.modal-close {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  background: none;
+  border: none;
+  font-size: 22px;
+  color: var(--muted);
+  cursor: pointer;
+  line-height: 1;
+}
+.modal-img { width: 100%; border-radius: 6px; display: block; margin-bottom: 12px; max-height: 60vh; object-fit: contain; }
+.modal-meta { font-size: 13px; color: var(--muted); margin-bottom: 4px; }
+.modal-meta strong { color: var(--text); }
+.modal-actions { margin-top: 14px; display: flex; gap: 8px; justify-content: flex-end; }
+
+/* ── Galeri Bukti ── */
+.gallery-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+  align-items: center;
+}
+.gallery-filter-label { font-size: 12px; color: var(--muted); }
+.filter-btn {
+  padding: 4px 12px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 12px;
+  cursor: pointer;
+  transition: background .12s;
+}
+.filter-btn.active { background: var(--accent2); color: #fff; border-color: var(--accent2); }
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+}
+@media (max-width: 400px) { .gallery-grid { grid-template-columns: repeat(2, 1fr); } }
+.gallery-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  cursor: pointer;
+}
+.gallery-card:hover { border-color: var(--accent2); }
+.gallery-card img { width: 100%; height: 120px; object-fit: cover; display: block; }
+.gallery-card-meta { padding: 6px 8px; font-size: 11px; color: var(--muted); line-height: 1.4; }
+.gallery-card-meta strong { color: var(--text); font-size: 12px; display: block; }
+.gallery-empty { text-align: center; padding: 48px 20px; color: var(--muted); font-size: 14px; }
+
+/* ── Utility section ── */
+.utility-section { margin-bottom: 20px; }
+.utility-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+@media (max-width: 500px) { .utility-grid { grid-template-columns: 1fr; } }
+
+.utility-meter-wrap {
+  margin: 12px 0;
+}
+.utility-meter-track {
+  position: relative;
+  height: 28px;
+  background: var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.utility-meter-fill {
+  height: 100%;
+  background: var(--accent2);
+  border-radius: 6px;
+  transition: width .4s;
+  position: relative;
+  z-index: 1;
+}
+.utility-meter-fill.on-target { background: var(--green); }
+.utility-meter-fill.over-target { background: var(--green); }
+.utility-meter-fill.below-target { background: var(--orange); }
+/* Target band overlay */
+.utility-target-band {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  background: rgba(22,163,74,.18);
+  border-left: 2px dashed #16a34a;
+  border-right: 2px dashed #16a34a;
+  z-index: 2;
+  pointer-events: none;
+}
+.utility-meter-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+.utility-pct-big {
+  font-size: 32px;
+  font-weight: 800;
+  line-height: 1;
+}
+.utility-status {
+  font-size: 12px;
+  margin-top: 2px;
+}
+.utility-status.on-target { color: var(--green); }
+.utility-status.below-target { color: var(--orange); }
+.utility-status.over-target { color: var(--accent2); }
+
+/* Monthly hours grid */
+.monthly-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-top: 10px;
+}
+@media (max-width: 500px) { .monthly-grid { grid-template-columns: repeat(3, 1fr); } }
+.monthly-cell { display: flex; flex-direction: column; gap: 3px; }
+.monthly-cell label { font-size: 10px; color: var(--muted); text-align: center; }
+.monthly-cell input {
+  text-align: center;
+  padding: 5px 4px;
+  border: 1px solid var(--input-border);
+  border-radius: 4px;
+  background: var(--input-bg);
+  color: var(--text);
+  font-size: 13px;
+  width: 100%;
+}
+.monthly-cell input:focus { border-color: var(--focus); }
+
+/* ── Log tables ── */
+.log-section { margin-bottom: 20px; }
+.log-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.log-title { font-size: 15px; font-weight: 700; }
+.btn {
+  padding: 7px 14px;
+  border-radius: 6px;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity .15s;
+}
+.btn:hover { opacity: .85; }
+.btn-primary { background: var(--accent2); color: #fff; }
+.btn-secondary { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+.btn-danger { background: var(--red); color: #fff; font-size: 12px; padding: 4px 10px; }
+.btn-sm { padding: 4px 10px; font-size: 12px; }
+
+.log-form {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 12px;
+  display: none;
+}
+.log-form.open { display: block; }
+.log-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+@media (max-width: 500px) { .log-form-grid { grid-template-columns: 1fr; } }
+.log-form-actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+.log-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.log-table th {
+  text-align: left;
+  padding: 8px 12px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 600;
+}
+.log-table td { padding: 8px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+.log-table tr:last-child td { border-bottom: none; }
+.log-empty { text-align: center; color: var(--muted); padding: 24px; font-size: 13px; }
+
+/* Level badges */
+.level-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.level-Jabatan { background: #dbeafe; color: #1e40af; }
+.level-Institusi { background: #ede9fe; color: #5b21b6; }
+.level-Kementerian { background: #fef3c7; color: #92400e; }
+.level-Komuniti { background: #d1fae5; color: #065f46; }
+@media (prefers-color-scheme: dark) {
+  .level-Jabatan { background: #1e3a5f; color: #93c5fd; }
+  .level-Institusi { background: #2e1065; color: #c4b5fd; }
+  .level-Kementerian { background: #451a03; color: #fcd34d; }
+  .level-Komuniti { background: #064e3b; color: #6ee7b7; }
+}
+
+/* ── Star Rating Page ── */
+.sr-header {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+@media (max-width: 640px) { .sr-header { grid-template-columns: 1fr; } }
+
+.score-display {
+  padding: 20px;
+  background: var(--banner-bg);
+  color: var(--banner-text);
+  border-radius: var(--radius);
+}
+.score-label { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; opacity: .7; margin-bottom: 4px; }
+.score-big { font-size: 56px; font-weight: 800; line-height: 1; }
+.score-denom { font-size: 18px; font-weight: 400; opacity: .6; }
+.score-msg { font-size: 13px; margin-top: 6px; opacity: .85; }
+
+.stars-display {
+  padding: 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+}
+.stars-label { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: 8px; }
+.stars-row { display: flex; gap: 6px; }
+.star-icon { font-size: 28px; }
+.star-icon.filled { color: var(--gold-light); }
+.star-icon.empty { color: var(--star-empty); }
+.stars-sub { font-size: 12px; color: var(--muted); margin-top: 6px; }
+
+.star-scale-label { font-size: 13px; font-weight: 600; margin-bottom: 8px; }
+.star-scale-track {
+  position: relative;
+  height: 36px;
+  border-radius: 4px;
+  overflow: visible;
+  display: flex;
+}
+.star-band {
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255,255,255,.9);
+  position: relative;
+  overflow: hidden;
+}
+.star-band:first-child { border-radius: 4px 0 0 4px; }
+.star-band:last-child { border-radius: 0 4px 4px 0; }
+.star-band-1 { background: #6b7280; }
+.star-band-2 { background: #9ca3af; }
+.star-band-3 { background: #60a5fa; }
+.star-band-4 { background: #3b82f6; }
+.star-band-5 { background: #1e40af; }
+.score-marker {
+  position: absolute;
+  top: -6px;
+  width: 4px;
+  height: 48px;
+  background: var(--gold);
+  border-radius: 2px;
+  transform: translateX(-50%);
+  z-index: 5;
+}
+.score-marker::after {
+  content: '';
+  position: absolute;
+  top: -5px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 10px;
+  height: 10px;
+  background: var(--gold);
+  border-radius: 50%;
+}
+.star-scale-ticks {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.element-summaries { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+@media (max-width: 700px) { .element-summaries { grid-template-columns: 1fr; } }
+.elem-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+}
+.elem-card-name { font-size: 13px; font-weight: 700; }
+.elem-card-weight { font-size: 11px; color: var(--muted); }
+.elem-card-score { font-size: 22px; font-weight: 800; margin: 4px 0; }
+.elem-bar-wrap { height: 12px; background: var(--border); border-radius: 6px; overflow: hidden; display: flex; margin: 6px 0; }
+.elem-bar-earned { background: var(--accent2); height: 100%; }
+.elem-bar-unassessed { background: var(--hatch); height: 100%; }
+.elem-bar-lost { background: var(--border); height: 100%; }
+.elem-card-sub { font-size: 11px; color: var(--muted); }
+
+.rubric-section { margin-bottom: 32px; }
+.rubric-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--accent);
+  color: #fff;
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+.rubric-section-title { font-size: 15px; font-weight: 700; }
+.rubric-section-weight { font-size: 12px; opacity: .8; }
+.rubric-item {
+  border: 1px solid var(--border);
+  border-top: none;
+  padding: 14px 16px;
+  display: grid;
+  grid-template-columns: 28px 1fr auto;
+  gap: 12px;
+  align-items: start;
+  background: var(--card-bg);
+}
+.rubric-item:last-child { border-radius: 0 0 var(--radius) var(--radius); }
+.rubric-item:hover { background: var(--surface); }
+.rubric-num { font-size: 13px; font-weight: 700; color: var(--muted); padding-top: 2px; }
+.rubric-name { font-size: 14px; font-weight: 600; }
+.rubric-max { font-size: 12px; color: var(--muted); }
+.rubric-inputs { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+.mark-input-wrap { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+.mark-input-wrap label { font-size: 11px; color: var(--muted); }
+.mark-input {
+  width: 72px;
+  padding: 5px 8px;
+  border: 1px solid var(--input-border);
+  border-radius: 5px;
+  background: var(--input-bg);
+  color: var(--text);
+  text-align: right;
+  font-size: 14px;
+  font-weight: 600;
+}
+.mark-input:focus { border-color: var(--focus); }
+.mark-of { font-size: 12px; color: var(--muted); white-space: nowrap; }
+
+.top-gaps-title { font-size: 14px; font-weight: 700; margin-bottom: 10px; }
+.gap-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+.gap-row:last-child { border-bottom: none; }
+.gap-item-name { flex: 1; }
+.gap-item-sub { font-size: 11px; color: var(--muted); }
+.gap-points { font-size: 14px; font-weight: 700; color: var(--accent2); white-space: nowrap; }
+
+.evidence-summary-title { font-size: 14px; font-weight: 700; margin-bottom: 10px; }
+.ev-status-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+.ev-status-row:last-child { border-bottom: none; }
+.ev-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.ev-dot.ada { background: var(--green); }
+.ev-dot.separa { background: var(--orange); }
+.ev-dot.tiada { background: var(--red); }
+.ev-dot.belum { background: var(--star-empty); }
+.ev-count { margin-left: auto; font-weight: 700; }
+.ev-note { font-size: 11px; color: var(--muted); padding: 8px 14px; }
+
+.sr-bottom-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+@media (max-width: 640px) { .sr-bottom-grid { grid-template-columns: 1fr; } }
+
+/* Mobile nav tabs */
+#mobile-nav {
+  display: none;
+  overflow-x: auto;
+  background: var(--nav-bg);
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+#mobile-nav::-webkit-scrollbar { display: none; }
+#mobile-nav .nav-link {
+  white-space: nowrap;
+  border-left: none;
+  border-bottom: 3px solid transparent;
+  padding: 12px 16px;
+}
+#mobile-nav .nav-link.active { border-bottom-color: var(--accent2); border-left-color: transparent; }
+
+@media (max-width: 680px) {
+  #sidenav { display: none; }
+  #mobile-nav { display: flex; }
+  .page { padding: 16px; }
+  #topbar { padding: 10px 16px; }
+  #topbar h1 { font-size: 16px; }
+}
+
+/* Placeholder pages */
+.placeholder { text-align: center; padding: 60px 20px; color: var(--muted); }
+.placeholder h2 { font-size: 20px; margin-bottom: 8px; color: var(--text); }
+
+/* Utilities */
+.mt-4  { margin-top: 4px; }
+.mt-8  { margin-top: 8px; }
+.mt-12 { margin-top: 12px; }
+.mt-16 { margin-top: 16px; }
+.mt-20 { margin-top: 20px; }
+.mb-4  { margin-bottom: 4px; }
+.mb-8  { margin-bottom: 8px; }
+.mb-12 { margin-bottom: 12px; }
+.mb-16 { margin-bottom: 16px; }
+.mb-20 { margin-bottom: 20px; }
+.text-muted { color: var(--muted); }
+.text-sm { font-size: 13px; }
+.text-xs { font-size: 11px; }
+.font-bold { font-weight: 700; }
+.section-title { font-size: 16px; font-weight: 700; margin-bottom: 12px; }
+
+/* ── Dashboard ── */
+.dash-banner {
+  background: var(--banner-bg);
+  color: var(--banner-text);
+  border-radius: var(--radius);
+  padding: 28px 32px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+.dash-banner-left {}
+.dash-banner-tag { font-size: 11px; text-transform: uppercase; letter-spacing: .1em; opacity: .6; margin-bottom: 4px; }
+.dash-banner-score { font-size: 72px; font-weight: 900; line-height: 1; }
+.dash-banner-denom { font-size: 22px; font-weight: 400; opacity: .55; }
+.dash-banner-msg { font-size: 14px; opacity: .8; margin-top: 6px; }
+.dash-banner-btn {
+  display: inline-block;
+  margin-top: 14px;
+  padding: 10px 22px;
+  background: var(--gold);
+  color: #fff;
+  border: none;
+  border-radius: 7px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  transition: opacity .15s;
+}
+.dash-banner-btn:hover { opacity: .88; text-decoration: none; }
+.dash-banner-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+.dash-stars-row { display: flex; gap: 8px; }
+.dash-star { font-size: 36px; }
+.dash-star.filled { color: var(--gold-light); }
+.dash-star.empty  { color: rgba(255,255,255,.2); }
+.dash-stars-sub { font-size: 13px; opacity: .7; text-align: right; }
+
+.stat-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 20px;
+}
+@media (max-width: 700px) { .stat-cards { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 400px) { .stat-cards { grid-template-columns: 1fr 1fr; } }
+.stat-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 16px;
+  box-shadow: var(--shadow);
+}
+.stat-card-icon { font-size: 20px; margin-bottom: 8px; color: var(--accent2); }
+.stat-card-val { font-size: 30px; font-weight: 800; line-height: 1; }
+.stat-card-tag { font-size: 11px; color: var(--muted); margin-top: 4px; }
+.stat-card-badge {
+  display: inline-block;
+  padding: 1px 7px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 700;
+  margin-left: 6px;
+}
+.badge-green { background: #dcfce7; color: #15803d; }
+.badge-orange { background: #ffedd5; color: #c2410c; }
+@media (prefers-color-scheme: dark) {
+  .badge-green  { background: #14532d; color: #4ade80; }
+  .badge-orange { background: #431407; color: #fb923c; }
+}
+
+.dash-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+@media (max-width: 680px) { .dash-grid { grid-template-columns: 1fr; } }
+
+/* Activity bar chart (SVG) */
+.chart-wrap { overflow-x: auto; }
+.chart-wrap svg { display: block; }
+
+/* Element score bars */
+.elem-score-row { margin-bottom: 16px; }
+.elem-score-label { display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+.elem-score-pct { font-size: 12px; color: var(--muted); }
+
+/* Recent evidence grid */
+.recent-evidence-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+}
+.recent-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  cursor: pointer;
+}
+.recent-card:hover { border-color: var(--accent2); }
+.recent-card img { width: 100%; height: 90px; object-fit: cover; display: block; }
+.recent-card-meta { padding: 5px 7px; font-size: 11px; color: var(--muted); line-height: 1.35; }
+.recent-card-meta strong { color: var(--text); font-size: 11px; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Export / Import */
+.io-bar {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+  padding: 12px 0;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+}
+.io-bar .btn { font-size: 13px; }
+
+/* ── Penggunaan Pelajar ── */
+.form-link-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 18px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.form-link-url {
+  font-size: 13px;
+  color: var(--accent2);
+  word-break: break-all;
+  flex: 1;
+}
+.copy-btn {
+  padding: 5px 12px;
+  border-radius: 5px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .12s;
+}
+.copy-btn:hover { background: var(--surface); }
+.copy-btn.copied { background: var(--green); color: #fff; border-color: var(--green); }
+
+.stat-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.stat-tile {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+  text-align: center;
+}
+.stat-tile-val { font-size: 28px; font-weight: 800; line-height: 1; }
+.stat-tile-lbl { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+.rating-bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 13px; }
+.rating-bar-track { flex: 1; height: 10px; background: var(--border); border-radius: 5px; overflow: hidden; }
+.rating-bar-fill { height: 100%; background: var(--gold-light); border-radius: 5px; }
+.rating-bar-count { width: 28px; text-align: right; font-size: 12px; color: var(--muted); }
+
+.group-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.group-table th {
+  text-align: left;
+  padding: 7px 10px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 600;
+}
+.group-table td { padding: 7px 10px; border-bottom: 1px solid var(--border); }
+.group-table tr:last-child td { border-bottom: none; }
+.mean-pill {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 12px;
+}
+.mean-high { background: #dcfce7; color: #15803d; }
+.mean-mid  { background: #fef3c7; color: #92400e; }
+.mean-low  { background: #fee2e2; color: #b91c1c; }
+@media (prefers-color-scheme: dark) {
+  .mean-high { background: #14532d; color: #4ade80; }
+  .mean-mid  { background: #451a03; color: #fcd34d; }
+  .mean-low  { background: #450a0a; color: #f87171; }
+}
+
+.open-answers-section { margin-top: 20px; }
+.open-answer-item {
+  padding: 8px 12px;
+  border-left: 3px solid var(--border);
+  margin-bottom: 8px;
+  font-size: 13px;
+  color: var(--text);
+  background: var(--surface);
+  border-radius: 0 4px 4px 0;
+}
+
+.course-filter-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+
+.two-col-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+@media (max-width: 640px) { .two-col-stats { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- Side navigation (desktop) -->
+  <nav id="sidenav" aria-label="Navigasi utama">
+    <div class="nav-logo">
+      <span class="nav-logo-star" aria-hidden="true">★</span>
+      <div>
+        <div class="nav-logo-title">TeCC 2.0</div>
+        <div class="nav-logo-sub">Politeknik Nilai</div>
+      </div>
+    </div>
+    <div class="nav-links" id="nav-links-desktop"></div>
+    <div class="nav-footer">TeCC 2.0 Rating Score<br>2024–2027</div>
+  </nav>
+
+  <div id="main">
+    <!-- Mobile nav tabs -->
+    <nav id="mobile-nav" aria-label="Navigasi mudah alih">
+      <div id="nav-links-mobile"></div>
+    </nav>
+
+    <!-- Top bar -->
+    <header id="topbar">
+      <h1 id="page-title">Star Rating</h1>
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+        <span class="save-indicator" id="save-indicator" aria-live="polite"></span>
+        <div class="year-tabs" role="group" aria-label="Pilih tahun" id="year-tabs"></div>
+      </div>
+    </header>
+
+    <!-- Pages -->
+    <main>
+      <!-- Dashboard -->
+      <section class="page" id="page-dashboard">
+        <div id="dashboard-content"></div>
+      </section>
+
+      <!-- T&L Design -->
+      <section class="page" id="page-tl">
+        <div id="tl-content"></div>
+      </section>
+
+      <!-- Space Management -->
+      <section class="page" id="page-space">
+        <div id="space-content"></div>
+      </section>
+
+      <!-- Sharing Knowledge -->
+      <section class="page" id="page-sharing">
+        <div id="sharing-content"></div>
+      </section>
+
+      <!-- Penggunaan Pelajar -->
+      <section class="page" id="page-students">
+        <div id="students-content"></div>
+      </section>
+
+      <!-- Galeri Bukti -->
+      <section class="page" id="page-galeri">
+        <div id="galeri-content"></div>
+      </section>
+
+      <!-- Image modal (shared) -->
+      <div class="modal-overlay hidden" id="img-modal" role="dialog" aria-modal="true" aria-label="Bukti imej">
+        <div class="modal-box">
+          <button class="modal-close" id="modal-close-btn" aria-label="Tutup">&times;</button>
+          <img class="modal-img" id="modal-img" src="" alt="">
+          <div class="modal-meta" id="modal-meta-item"></div>
+          <div class="modal-meta" id="modal-meta-uploader"></div>
+          <div class="modal-meta" id="modal-meta-date"></div>
+          <div class="modal-meta" id="modal-meta-note"></div>
+          <div class="modal-actions">
+            <button class="btn btn-danger" id="modal-delete-btn">Padam imej</button>
+            <button class="btn btn-secondary" id="modal-close-btn2">Tutup</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Star Rating page -->
+      <section class="page" id="page-starrating">
+        <div id="sr-content"></div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+/* ═══════════════════════════════════════════════
+   RUBRIC DATA (fixed)
+═══════════════════════════════════════════════ */
+const ELEMENTS = [
+  {
+    id: 'e1',
+    name: 'Learning and Teaching Design',
+    nameBM: 'Reka Bentuk P&P',
+    weight: 0.5,
+    items: [
+      { id: 1,  name: 'Course Outline', max: 10 },
+      { id: 2,  name: 'Reflection on the Semester Teaching Plan (RMS)', max: 10 },
+      { id: 3,  name: "Students' Usage Reflection", max: 10 },
+      { id: 4,  name: 'Teaching Method', max: 20 },
+      { id: 5,  name: 'Integration Technology Usage', max: 20 },
+      { id: 6,  name: 'LMS CIDOS Platform', max: 20 },
+      { id: 7,  name: 'Teaching and Learning Observation', max: 10 },
+    ]
+  },
+  {
+    id: 'e2',
+    name: 'Space Management',
+    nameBM: 'Pengurusan Ruang',
+    weight: 0.3,
+    items: [
+      { id: 8,  name: 'Organizational implementation chart', max: 20 },
+      { id: 9,  name: 'Planning on usage', max: 20 },
+      { id: 10, name: 'Annual calendar', max: 10 },
+      { id: 11, name: 'Utility factor (75-80%)', max: 10 },
+      { id: 12, name: 'Usage schedule', max: 10 },
+      { id: 13, name: 'SOP for equipment usage', max: 20 },
+      { id: 14, name: 'Maintenance monitoring', max: 10 },
+    ]
+  },
+  {
+    id: 'e3',
+    name: 'Sharing Knowledge',
+    nameBM: 'Perkongsian Ilmu',
+    weight: 0.2,
+    items: [
+      { id: 15, name: 'TeCC usage briefing/orientation', max: 30 },
+      { id: 16, name: 'Number of activities in TeCC', max: 40 },
+      { id: 17, name: 'Platform for disseminating TeCC activities', max: 30 },
+    ]
+  }
+];
+
+const ITEM_MAP = {};
+ELEMENTS.forEach(el => el.items.forEach(it => { ITEM_MAP[it.id] = { ...it, element: el }; }));
+
+const MONTHS_BM = ['Jan','Feb','Mac','Apr','Mei','Jun','Jul','Ogo','Sep','Okt','Nov','Dis'];
+const ACTIVITY_LEVELS = ['Jabatan','Institusi','Kementerian','Komuniti'];
+
+/* ═══════════════════════════════════════════════
+   SCORING FUNCTION (pure)
+═══════════════════════════════════════════════ */
+function computeScore(marks) {
+  const elementScores = ELEMENTS.map(el => {
+    let earned = 0, maxPossible = 0, unassessed = 0;
+    el.items.forEach(it => {
+      maxPossible += it.max;
+      const v = marks[it.id];
+      if (v === null || v === undefined || v === '') {
+        unassessed += it.max;
+      } else {
+        earned += Number(v);
+      }
+    });
+    const pct100 = (earned / maxPossible) * 100;
+    return { id: el.id, name: el.name, weight: el.weight, earned, maxPossible, unassessed, pct100 };
+  });
+
+  const anyMarked = ELEMENTS.some(el =>
+    el.items.some(it => marks[it.id] !== null && marks[it.id] !== undefined && marks[it.id] !== '')
+  );
+
+  if (!anyMarked) {
+    return { overall: null, stars: 0, elementScores, anyMarked: false };
+  }
+
+  const raw = elementScores.reduce((sum, es) => sum + es.pct100 * es.weight, 0);
+  const overall = Math.round(raw);
+
+  let stars = 1;
+  if (overall >= 71) stars = 5;
+  else if (overall >= 61) stars = 4;
+  else if (overall >= 41) stars = 3;
+  else if (overall >= 21) stars = 2;
+  else stars = 1;
+
+  return { overall, stars, elementScores, anyMarked: true };
+}
+
+function nextStarMsg(overall, stars) {
+  if (stars >= 5) return 'Tahniah! Skor maksimum 5 bintang dicapai.';
+  const thresholds = [0, 21, 41, 61, 71, 101];
+  const next = thresholds[stars];
+  const needed = next - overall;
+  return `${stars} bintang. Perlu ${needed} mata lagi untuk ${stars + 1} bintang (mula pada ${next}).`;
+}
+
+const STAR_BANDS = [
+  { min: 0,  max: 21,  label: '1★', pct: 21 },
+  { min: 21, max: 41,  label: '2★', pct: 20 },
+  { min: 41, max: 61,  label: '3★', pct: 20 },
+  { min: 61, max: 71,  label: '4★', pct: 10 },
+  { min: 71, max: 101, label: '5★', pct: 30 },
+];
+
+/* ═══════════════════════════════════════════════
+   NAVIGATION
+═══════════════════════════════════════════════ */
+const PAGES = [
+  { id: 'dashboard',  label: 'Dashboard',           icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>' },
+  { id: 'tl',         label: 'T&L Design',          icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>' },
+  { id: 'space',      label: 'Space Management',    icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>' },
+  { id: 'sharing',    label: 'Sharing Knowledge',   icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>' },
+  { id: 'students',   label: 'Penggunaan Pelajar',  icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>' },
+  { id: 'galeri',     label: 'Galeri Bukti',        icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>' },
+  { id: 'starrating', label: 'Star Rating',         icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>' },
+];
+
+let currentPage = 'starrating';
+let currentYear  = '2026';
+
+function buildNav() {
+  ['nav-links-desktop','nav-links-mobile'].forEach(containerId => {
+    const container = document.getElementById(containerId);
+    container.innerHTML = '';
+    PAGES.forEach(p => {
+      const btn = document.createElement('button');
+      btn.className = 'nav-link' + (p.id === currentPage ? ' active' : '');
+      btn.setAttribute('aria-current', p.id === currentPage ? 'page' : 'false');
+      btn.dataset.page = p.id;
+      btn.innerHTML = p.icon + '<span></span>';
+      btn.querySelector('span').textContent = p.label;
+      btn.addEventListener('click', () => navigateTo(p.id));
+      container.appendChild(btn);
+    });
+  });
+}
+
+function buildYearTabs() {
+  const container = document.getElementById('year-tabs');
+  container.innerHTML = '';
+  ['2024','2025','2026','2027'].forEach(y => {
+    const btn = document.createElement('button');
+    btn.className = 'year-tab' + (y === currentYear ? ' active' : '');
+    btn.textContent = y;
+    btn.setAttribute('aria-pressed', y === currentYear ? 'true' : 'false');
+    btn.addEventListener('click', () => { currentYear = y; buildYearTabs(); renderActivePage(); });
+    container.appendChild(btn);
+  });
+}
+
+function navigateTo(pageId) {
+  currentPage = pageId;
+  document.querySelectorAll('.nav-link').forEach(btn => {
+    const active = btn.dataset.page === pageId;
+    btn.classList.toggle('active', active);
+    btn.setAttribute('aria-current', active ? 'page' : 'false');
+  });
+  const pg = PAGES.find(p => p.id === pageId);
+  document.getElementById('page-title').textContent = pg ? pg.label : '';
+  document.querySelectorAll('.page').forEach(el => {
+    el.classList.toggle('active', el.id === 'page-' + pageId);
+  });
+  renderActivePage();
+}
+
+function renderActivePage() {
+  if (currentPage === 'dashboard') renderDashboardPage();
+  else if (currentPage === 'starrating') renderStarRatingPage();
+  else if (currentPage === 'tl')    renderElementPage('e1');
+  else if (currentPage === 'space') renderElementPage('e2');
+  else if (currentPage === 'sharing') renderElementPage('e3');
+  else if (currentPage === 'galeri') renderGaleriPage();
+  else if (currentPage === 'students') renderStudentsPage();
+}
+
+/* ═══════════════════════════════════════════════
+   LOCAL STORAGE
+═══════════════════════════════════════════════ */
+const LS_KEY = 'tecc_pns_v1';
+
+function loadData() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (!raw) return defaultData();
+    const parsed = JSON.parse(raw);
+    // ensure all years exist
+    ['2024','2025','2026','2027'].forEach(y => {
+      if (!parsed[y]) parsed[y] = defaultYearData();
+    });
+    return parsed;
+  } catch(e) { return defaultData(); }
+}
+
+function defaultYearData() {
+  const items = {};
+  ELEMENTS.forEach(el => el.items.forEach(it => {
+    items[it.id] = { mark: '', status: 'Belum semak', link: '', note: '', images: [] };
+  }));
+  return {
+    items,
+    utility: { hoursUsed: '', hoursAvailable: '', monthly: Array(12).fill('') },
+    activities: [],
+    maintenance: [],
+  };
+}
+
+function defaultData() {
+  return { '2024': defaultYearData(), '2025': defaultYearData(), '2026': defaultYearData(), '2027': defaultYearData() };
+}
+
+let appData = loadData();
+
+function saveData() {
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify(appData));
+    showSaveIndicator('Semua perubahan disimpan');
+  } catch(e) {
+    if (e.name === 'QuotaExceededError' || e.code === 22) {
+      showSaveIndicator('⚠ Storan penuh! Data tidak disimpan.', true);
+    } else {
+      showSaveIndicator('⚠ Gagal simpan: ' + e.message, true);
+    }
+  }
+}
+
+let saveTimer = null;
+function debouncedSave() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveData, 800);
+}
+
+function showSaveIndicator(msg, isError = false) {
+  const el = document.getElementById('save-indicator');
+  el.textContent = msg;
+  el.style.color = isError ? 'var(--red)' : 'var(--muted)';
+}
+
+function getYearData(year) {
+  if (!appData[year]) appData[year] = defaultYearData();
+  // ensure utility.monthly exists
+  if (!appData[year].utility) appData[year].utility = { hoursUsed: '', hoursAvailable: '', monthly: Array(12).fill('') };
+  if (!appData[year].utility.monthly) appData[year].utility.monthly = Array(12).fill('');
+  if (!appData[year].activities) appData[year].activities = [];
+  if (!appData[year].maintenance) appData[year].maintenance = [];
+  return appData[year];
+}
+
+function getMarks(year) {
+  const yd = getYearData(year);
+  const marks = {};
+  ELEMENTS.forEach(el => el.items.forEach(it => {
+    const v = yd.items[it.id]?.mark;
+    marks[it.id] = (v === '' || v === null || v === undefined) ? null : Number(v);
+  }));
+  return marks;
+}
+
+/* Compute utility % for a year */
+function computeUtility(year) {
+  const yd = getYearData(year);
+  const u = yd.utility;
+  // If monthly hours filled, sum them as hoursUsed
+  const monthlySum = u.monthly.reduce((s, v) => s + (v !== '' ? Number(v) : 0), 0);
+  const hasMonthly = u.monthly.some(v => v !== '');
+  const used = hasMonthly ? monthlySum : (u.hoursUsed !== '' ? Number(u.hoursUsed) : null);
+  const avail = u.hoursAvailable !== '' ? Number(u.hoursAvailable) : null;
+  if (used === null || avail === null || avail === 0) return null;
+  return (used / avail) * 100;
+}
+
+/* ═══════════════════════════════════════════════
+   ELEMENT PAGE RENDERER
+   elId = 'e1' | 'e2' | 'e3'
+═══════════════════════════════════════════════ */
+function renderElementPage(elId) {
+  const pageIds = { e1: 'tl-content', e2: 'space-content', e3: 'sharing-content' };
+  const container = document.getElementById(pageIds[elId]);
+  container.innerHTML = '';
+
+  const el = ELEMENTS.find(e => e.id === elId);
+  const yd = getYearData(currentYear);
+  const marks = getMarks(currentYear);
+  const { elementScores } = computeScore(marks);
+  const es = elementScores.find(e => e.id === elId);
+
+  /* ── Banner ── */
+  const banner = document.createElement('div');
+  banner.className = 'element-banner';
+
+  const bl = document.createElement('div');
+  bl.className = 'element-banner-left';
+  const blLabel = document.createElement('div');
+  blLabel.className = 'element-banner-label';
+  blLabel.textContent = `ELEMEN ${elId.replace('e','')} · ${(el.weight*100).toFixed(0)}% WAJARAN`;
+  const blName = document.createElement('div');
+  blName.className = 'element-banner-name';
+  blName.textContent = el.name;
+  bl.appendChild(blLabel);
+  bl.appendChild(blName);
+
+  const br = document.createElement('div');
+  br.className = 'element-banner-right';
+  const brScore = document.createElement('div');
+  brScore.className = 'element-banner-score';
+  const anyMarked = Object.values(marks).some(v => v !== null);
+  brScore.textContent = anyMarked ? es.pct100.toFixed(0) : '—';
+  if (anyMarked) {
+    const d = document.createElement('span');
+    d.className = 'element-banner-score-denom';
+    d.textContent = ' / 100';
+    brScore.appendChild(d);
+  }
+  const brPct = document.createElement('div');
+  brPct.className = 'element-banner-pct';
+  brPct.textContent = `Sumbang ${(es.weight*100).toFixed(0)}% daripada skor keseluruhan`;
+  br.appendChild(brScore);
+  br.appendChild(brPct);
+
+  banner.appendChild(bl);
+  banner.appendChild(br);
+  container.appendChild(banner);
+
+  /* ── Rubric items ── */
+  const sectionTitle = document.createElement('div');
+  sectionTitle.className = 'section-title';
+  sectionTitle.textContent = 'Item Rubrik';
+  container.appendChild(sectionTitle);
+
+  el.items.forEach(it => {
+    const itemData = yd.items[it.id] || { mark: '', status: 'Belum semak', link: '', note: '', images: [] };
+    container.appendChild(buildRubricItemCard(it, el, itemData));
+  });
+
+  /* ── Extra sections per element ── */
+  if (elId === 'e2') {
+    container.appendChild(buildUtilitySection(yd));
+    container.appendChild(buildMaintenanceLog(yd));
+  }
+  if (elId === 'e3') {
+    container.appendChild(buildActivityLog(yd));
+  }
+}
+
+/* ── Build a single rubric item card ── */
+function buildRubricItemCard(it, el, itemData) {
+  const card = document.createElement('div');
+  card.className = 'elem-rubric-item mb-12';
+
+  /* header */
+  const hdr = document.createElement('div');
+  hdr.className = 'elem-rubric-header';
+  const num = document.createElement('div');
+  num.className = 'elem-rubric-num';
+  num.textContent = it.id;
+  const title = document.createElement('div');
+  title.className = 'elem-rubric-title';
+  title.textContent = it.name;
+  const maxLbl = document.createElement('div');
+  maxLbl.className = 'elem-rubric-max';
+  maxLbl.textContent = `Maks ${it.max}`;
+  hdr.appendChild(num);
+  hdr.appendChild(title);
+  hdr.appendChild(maxLbl);
+  card.appendChild(hdr);
+
+  /* body */
+  const body = document.createElement('div');
+  body.className = 'elem-rubric-body';
+
+  /* progress bar */
+  const barRow = document.createElement('div');
+  barRow.className = 'mark-bar-row';
+  const track = document.createElement('div');
+  track.className = 'mark-bar-track';
+  const fill = document.createElement('div');
+  fill.className = 'mark-bar-fill';
+  const markVal = itemData.mark !== '' && itemData.mark !== null ? Number(itemData.mark) : 0;
+  fill.style.width = (markVal / it.max * 100) + '%';
+  fill.id = `bar-fill-${currentYear}-${it.id}`;
+  track.appendChild(fill);
+  const barLbl = document.createElement('div');
+  barLbl.className = 'mark-bar-label';
+  barLbl.textContent = itemData.mark !== '' && itemData.mark !== null ? `${itemData.mark} / ${it.max}` : `— / ${it.max}`;
+  barLbl.id = `bar-lbl-${currentYear}-${it.id}`;
+  barRow.appendChild(track);
+  barRow.appendChild(barLbl);
+  body.appendChild(barRow);
+
+  /* field row 1: mark + status */
+  const row1 = document.createElement('div');
+  row1.className = 'field-row';
+
+  const markGroup = document.createElement('div');
+  markGroup.className = 'field-group';
+  const markLblEl = document.createElement('label');
+  const markId = `mark-ep-${currentYear}-${it.id}`;
+  markLblEl.htmlFor = markId;
+  markLblEl.textContent = `Markah (0 – ${it.max})`;
+  const markInp = document.createElement('input');
+  markInp.type = 'number';
+  markInp.id = markId;
+  markInp.className = 'field-input mark-num';
+  markInp.min = '0';
+  markInp.max = it.max;
+  markInp.step = '0.5';
+  markInp.placeholder = 'Belum dinilai';
+  if (itemData.mark !== '' && itemData.mark !== null && itemData.mark !== undefined) {
+    markInp.value = itemData.mark;
+  }
+  markInp.addEventListener('input', () => {
+    let v = markInp.value;
+    if (v !== '') {
+      let n = parseFloat(v);
+      if (isNaN(n)) n = 0;
+      if (n < 0) n = 0;
+      if (n > it.max) n = it.max;
+      v = n;
+      markInp.value = v;
+    }
+    getYearData(currentYear).items[it.id].mark = v === '' ? '' : v;
+    // update bar
+    const pct = v === '' ? 0 : (Number(v) / it.max * 100);
+    const f = document.getElementById(`bar-fill-${currentYear}-${it.id}`);
+    const l = document.getElementById(`bar-lbl-${currentYear}-${it.id}`);
+    if (f) f.style.width = pct + '%';
+    if (l) l.textContent = v === '' ? `— / ${it.max}` : `${v} / ${it.max}`;
+    debouncedSave();
+  });
+  markGroup.appendChild(markLblEl);
+  markGroup.appendChild(markInp);
+
+  const statusGroup = document.createElement('div');
+  statusGroup.className = 'field-group';
+  const statusLblEl = document.createElement('label');
+  const statusId = `status-ep-${currentYear}-${it.id}`;
+  statusLblEl.htmlFor = statusId;
+  statusLblEl.textContent = 'Status bukti';
+  const statusSel = document.createElement('select');
+  statusSel.id = statusId;
+  statusSel.className = 'field-input';
+  ['Belum semak','Ada bukti','Separa','Tiada'].forEach(opt => {
+    const o = document.createElement('option');
+    o.value = opt;
+    o.textContent = opt;
+    statusSel.appendChild(o);
+  });
+  statusSel.value = itemData.status || 'Belum semak';
+  statusSel.addEventListener('change', () => {
+    getYearData(currentYear).items[it.id].status = statusSel.value;
+    debouncedSave();
+  });
+  statusGroup.appendChild(statusLblEl);
+  statusGroup.appendChild(statusSel);
+
+  row1.appendChild(markGroup);
+  row1.appendChild(statusGroup);
+  body.appendChild(row1);
+
+  /* field row 2: link + note */
+  const row2 = document.createElement('div');
+  row2.className = 'field-row';
+
+  const linkGroup = document.createElement('div');
+  linkGroup.className = 'field-group';
+  const linkLblEl = document.createElement('label');
+  const linkId = `link-ep-${currentYear}-${it.id}`;
+  linkLblEl.htmlFor = linkId;
+  linkLblEl.textContent = 'Pautan bukti (URL)';
+  const linkInp = document.createElement('input');
+  linkInp.type = 'url';
+  linkInp.id = linkId;
+  linkInp.className = 'field-input';
+  linkInp.placeholder = 'https://...';
+  linkInp.value = itemData.link || '';
+  linkInp.addEventListener('input', () => {
+    getYearData(currentYear).items[it.id].link = linkInp.value;
+    debouncedSave();
+  });
+  linkGroup.appendChild(linkLblEl);
+  linkGroup.appendChild(linkInp);
+
+  const noteGroup = document.createElement('div');
+  noteGroup.className = 'field-group';
+  const noteLblEl = document.createElement('label');
+  const noteId = `note-ep-${currentYear}-${it.id}`;
+  noteLblEl.htmlFor = noteId;
+  noteLblEl.textContent = 'Nota ringkas';
+  const noteInp = document.createElement('textarea');
+  noteInp.id = noteId;
+  noteInp.className = 'field-input';
+  noteInp.rows = 2;
+  noteInp.textContent = itemData.note || '';
+  noteInp.addEventListener('input', () => {
+    getYearData(currentYear).items[it.id].note = noteInp.value;
+    debouncedSave();
+  });
+  noteGroup.appendChild(noteLblEl);
+  noteGroup.appendChild(noteInp);
+
+  row2.appendChild(linkGroup);
+  row2.appendChild(noteGroup);
+  body.appendChild(row2);
+
+  /* ── Upload zone ── */
+  const uploadZone = document.createElement('div');
+  uploadZone.className = 'mt-8';
+  uploadZone.id = `upload-zone-${it.id}`;
+
+  const uploadBtn = document.createElement('button');
+  uploadBtn.className = 'upload-btn';
+  uploadBtn.type = 'button';
+  uploadBtn.setAttribute('aria-label', `Muat naik bukti untuk ${it.name}`);
+  uploadBtn.textContent = '+ Muat naik bukti';
+  // hidden file input
+  const fileInput = document.createElement('input');
+  fileInput.type = 'file';
+  fileInput.accept = 'image/*';
+  fileInput.multiple = true;
+  fileInput.style.display = 'none';
+  fileInput.setAttribute('aria-hidden', 'true');
+  uploadBtn.addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', () => handleImageUpload(fileInput, it.id, thumbStrip));
+
+  uploadZone.appendChild(uploadBtn);
+  uploadZone.appendChild(fileInput);
+
+  const thumbStrip = document.createElement('div');
+  thumbStrip.className = 'thumb-strip';
+  thumbStrip.id = `thumbs-${it.id}`;
+  renderThumbs(it.id, thumbStrip);
+  uploadZone.appendChild(thumbStrip);
+
+  body.appendChild(uploadZone);
+  card.appendChild(body);
+  return card;
+}
+
+/* ── Utility section (E2) ── */
+function buildUtilitySection(yd) {
+  const wrap = document.createElement('div');
+  wrap.className = 'utility-section mt-20';
+
+  const title = document.createElement('div');
+  title.className = 'section-title';
+  title.textContent = 'Faktor Utiliti (Item 11)';
+  wrap.appendChild(title);
+
+  const card = document.createElement('div');
+  card.className = 'card';
+  const body = document.createElement('div');
+  body.className = 'card-body';
+
+  /* Current pct display */
+  const pct = computeUtility(currentYear);
+  const pctDisplay = document.createElement('div');
+  pctDisplay.style.marginBottom = '16px';
+
+  const pctBig = document.createElement('div');
+  pctBig.className = 'utility-pct-big';
+  pctBig.id = 'utility-pct-big';
+  pctBig.textContent = pct !== null ? pct.toFixed(1) + '%' : '—';
+
+  const pctStatus = document.createElement('div');
+  pctStatus.className = 'utility-status';
+  pctStatus.id = 'utility-pct-status';
+  if (pct !== null) {
+    if (pct >= 75 && pct <= 80) { pctStatus.classList.add('on-target'); pctStatus.textContent = 'Dalam sasaran (75–80%)'; }
+    else if (pct < 75)          { pctStatus.classList.add('below-target'); pctStatus.textContent = `Di bawah sasaran – perlukan ${(75 - pct).toFixed(1)}% lagi`; }
+    else                         { pctStatus.classList.add('over-target'); pctStatus.textContent = 'Melebihi 80%'; }
+  } else {
+    pctStatus.textContent = 'Masukkan jam untuk kira utiliti';
+    pctStatus.style.color = 'var(--muted)';
+  }
+  pctDisplay.appendChild(pctBig);
+  pctDisplay.appendChild(pctStatus);
+  body.appendChild(pctDisplay);
+
+  /* Meter bar */
+  const meterWrap = document.createElement('div');
+  meterWrap.className = 'utility-meter-wrap';
+  const meterTrack = document.createElement('div');
+  meterTrack.className = 'utility-meter-track';
+  meterTrack.id = 'utility-meter-track';
+
+  const meterFill = document.createElement('div');
+  meterFill.id = 'utility-meter-fill';
+  const fillPct = pct !== null ? Math.min(pct, 100) : 0;
+  meterFill.style.width = fillPct + '%';
+  if (pct !== null) {
+    if (pct >= 75 && pct <= 80) meterFill.className = 'utility-meter-fill on-target';
+    else if (pct < 75) meterFill.className = 'utility-meter-fill below-target';
+    else meterFill.className = 'utility-meter-fill over-target';
+  } else {
+    meterFill.className = 'utility-meter-fill';
+    meterFill.style.width = '0%';
+  }
+  meterTrack.appendChild(meterFill);
+
+  /* Target band overlay 75–80% */
+  const targetBand = document.createElement('div');
+  targetBand.className = 'utility-target-band';
+  targetBand.style.left = '75%';
+  targetBand.style.width = '5%';
+  targetBand.setAttribute('aria-label', 'Sasaran 75–80%');
+  meterTrack.appendChild(targetBand);
+
+  const meterLbl = document.createElement('div');
+  meterLbl.className = 'utility-meter-label';
+  ['0%','25%','50%','75%','80%','100%'].forEach(v => {
+    const s = document.createElement('span');
+    s.textContent = v;
+    meterLbl.appendChild(s);
+  });
+
+  meterWrap.appendChild(meterTrack);
+  meterWrap.appendChild(meterLbl);
+  body.appendChild(meterWrap);
+
+  /* Inputs: hours used & hours available */
+  const inputGrid = document.createElement('div');
+  inputGrid.className = 'utility-grid mt-16';
+
+  function makeUtilityInput(lbl, id, placeholder, value) {
+    const grp = document.createElement('div');
+    grp.className = 'field-group';
+    const label = document.createElement('label');
+    label.htmlFor = id;
+    label.textContent = lbl;
+    const inp = document.createElement('input');
+    inp.type = 'number';
+    inp.id = id;
+    inp.className = 'field-input';
+    inp.min = '0';
+    inp.step = '0.5';
+    inp.placeholder = placeholder;
+    if (value !== '' && value !== null && value !== undefined) inp.value = value;
+    return { grp, inp, label };
+  }
+
+  const { grp: usedGrp, inp: usedInp, label: usedLbl } = makeUtilityInput('Jam digunakan (jumlah)', 'util-used', '0', yd.utility.hoursUsed);
+  usedGrp.appendChild(usedLbl);
+  usedGrp.appendChild(usedInp);
+
+  const { grp: availGrp, inp: availInp, label: availLbl } = makeUtilityInput('Jam tersedia (jumlah)', 'util-avail', '0', yd.utility.hoursAvailable);
+  availGrp.appendChild(availLbl);
+  availGrp.appendChild(availInp);
+
+  function refreshUtility() {
+    getYearData(currentYear).utility.hoursUsed = usedInp.value;
+    getYearData(currentYear).utility.hoursAvailable = availInp.value;
+    const p = computeUtility(currentYear);
+    const bigEl = document.getElementById('utility-pct-big');
+    const stEl = document.getElementById('utility-pct-status');
+    const fillEl = document.getElementById('utility-meter-fill');
+    if (bigEl) bigEl.textContent = p !== null ? p.toFixed(1) + '%' : '—';
+    if (stEl) {
+      stEl.className = 'utility-status';
+      stEl.style.color = '';
+      if (p !== null) {
+        if (p >= 75 && p <= 80) { stEl.classList.add('on-target'); stEl.textContent = 'Dalam sasaran (75–80%)'; }
+        else if (p < 75) { stEl.classList.add('below-target'); stEl.textContent = `Di bawah sasaran – perlukan ${(75 - p).toFixed(1)}% lagi`; }
+        else { stEl.classList.add('over-target'); stEl.textContent = 'Melebihi 80%'; }
+      } else { stEl.style.color = 'var(--muted)'; stEl.textContent = 'Masukkan jam untuk kira utiliti'; }
+    }
+    if (fillEl) {
+      const fp = p !== null ? Math.min(p, 100) : 0;
+      fillEl.style.width = fp + '%';
+      fillEl.className = 'utility-meter-fill' + (p !== null ? (p >= 75 && p <= 80 ? ' on-target' : p < 75 ? ' below-target' : ' over-target') : '');
+    }
+    // update monthly sum display
+    const sumEl = document.getElementById('monthly-sum-display');
+    if (sumEl) {
+      const ms = getYearData(currentYear).utility.monthly.reduce((s,v) => s + (v !== '' ? Number(v) : 0), 0);
+      sumEl.textContent = `Jumlah bulanan: ${ms} jam`;
+    }
+    debouncedSave();
+  }
+
+  usedInp.addEventListener('input', refreshUtility);
+  availInp.addEventListener('input', refreshUtility);
+
+  inputGrid.appendChild(usedGrp);
+  inputGrid.appendChild(availGrp);
+  body.appendChild(inputGrid);
+
+  /* Monthly hours */
+  const monthlyTitle = document.createElement('div');
+  monthlyTitle.className = 'font-bold text-sm mt-16 mb-8';
+  monthlyTitle.textContent = 'Jam penggunaan bulanan (pilihan – jika diisi, jumlahnya akan gantikan "Jam digunakan")';
+  body.appendChild(monthlyTitle);
+
+  const monthlyGrid = document.createElement('div');
+  monthlyGrid.className = 'monthly-grid';
+
+  MONTHS_BM.forEach((m, idx) => {
+    const cell = document.createElement('div');
+    cell.className = 'monthly-cell';
+    const lbl = document.createElement('label');
+    const inpId = `monthly-${currentYear}-${idx}`;
+    lbl.htmlFor = inpId;
+    lbl.textContent = m;
+    const inp = document.createElement('input');
+    inp.type = 'number';
+    inp.id = inpId;
+    inp.min = '0';
+    inp.step = '0.5';
+    inp.placeholder = '—';
+    const storedVal = yd.utility.monthly[idx];
+    if (storedVal !== '' && storedVal !== null && storedVal !== undefined) inp.value = storedVal;
+    inp.addEventListener('input', () => {
+      getYearData(currentYear).utility.monthly[idx] = inp.value;
+      // recalculate used from monthly
+      const ms = getYearData(currentYear).utility.monthly.reduce((s,v) => s + (v !== '' ? Number(v) : 0), 0);
+      const hasAny = getYearData(currentYear).utility.monthly.some(v => v !== '');
+      if (hasAny) {
+        getYearData(currentYear).utility.hoursUsed = ms;
+        usedInp.value = ms;
+      }
+      refreshUtility();
+    });
+    cell.appendChild(lbl);
+    cell.appendChild(inp);
+    monthlyGrid.appendChild(cell);
+  });
+
+  body.appendChild(monthlyGrid);
+
+  const sumDisp = document.createElement('div');
+  sumDisp.id = 'monthly-sum-display';
+  sumDisp.className = 'text-xs text-muted mt-8';
+  const ms = yd.utility.monthly.reduce((s,v) => s + (v !== '' ? Number(v) : 0), 0);
+  sumDisp.textContent = `Jumlah bulanan: ${ms} jam`;
+  body.appendChild(sumDisp);
+
+  card.appendChild(body);
+  wrap.appendChild(card);
+  return wrap;
+}
+
+/* ── Maintenance log (E2) ── */
+function buildMaintenanceLog(yd) {
+  const wrap = document.createElement('div');
+  wrap.className = 'log-section mt-20';
+
+  const hdr = document.createElement('div');
+  hdr.className = 'log-header';
+  const ttl = document.createElement('div');
+  ttl.className = 'log-title';
+  ttl.textContent = 'Log Penyelenggaraan';
+  const addBtn = document.createElement('button');
+  addBtn.className = 'btn btn-primary';
+  addBtn.textContent = '+ Tambah rekod';
+
+  hdr.appendChild(ttl);
+  hdr.appendChild(addBtn);
+  wrap.appendChild(hdr);
+
+  /* Add form */
+  const form = document.createElement('div');
+  form.className = 'log-form card';
+  const formGrid = document.createElement('div');
+  formGrid.className = 'log-form-grid';
+
+  const dateGrp = document.createElement('div');
+  dateGrp.className = 'field-group';
+  const dateLbl = document.createElement('label');
+  dateLbl.textContent = 'Tarikh';
+  dateLbl.htmlFor = 'maint-date-inp';
+  const dateInp = document.createElement('input');
+  dateInp.type = 'date';
+  dateInp.id = 'maint-date-inp';
+  dateInp.className = 'field-input';
+  dateGrp.appendChild(dateLbl);
+  dateGrp.appendChild(dateInp);
+
+  const descGrp = document.createElement('div');
+  descGrp.className = 'field-group';
+  const descLbl = document.createElement('label');
+  descLbl.textContent = 'Keterangan';
+  descLbl.htmlFor = 'maint-desc-inp';
+  const descInp = document.createElement('input');
+  descInp.type = 'text';
+  descInp.id = 'maint-desc-inp';
+  descInp.className = 'field-input';
+  descInp.placeholder = 'Penerangan penyelenggaraan';
+  descGrp.appendChild(descLbl);
+  descGrp.appendChild(descInp);
+
+  formGrid.appendChild(dateGrp);
+  formGrid.appendChild(descGrp);
+  form.appendChild(formGrid);
+
+  const formActions = document.createElement('div');
+  formActions.className = 'log-form-actions';
+  const cancelBtn = document.createElement('button');
+  cancelBtn.className = 'btn btn-secondary';
+  cancelBtn.textContent = 'Batal';
+  const saveBtn = document.createElement('button');
+  saveBtn.className = 'btn btn-primary';
+  saveBtn.textContent = 'Simpan';
+  formActions.appendChild(cancelBtn);
+  formActions.appendChild(saveBtn);
+  form.appendChild(formActions);
+  wrap.appendChild(form);
+
+  /* Table */
+  const tableWrap = document.createElement('div');
+  tableWrap.className = 'card';
+  const table = document.createElement('table');
+  table.className = 'log-table';
+  const thead = document.createElement('thead');
+  thead.innerHTML = '<tr><th>Tarikh</th><th>Keterangan</th><th></th></tr>';
+  table.appendChild(thead);
+  const tbody = document.createElement('tbody');
+  tbody.id = 'maint-tbody';
+  table.appendChild(tbody);
+  tableWrap.appendChild(table);
+  wrap.appendChild(tableWrap);
+
+  function refreshTable() {
+    tbody.innerHTML = '';
+    const records = getYearData(currentYear).maintenance;
+    if (records.length === 0) {
+      const tr = document.createElement('tr');
+      const td = document.createElement('td');
+      td.colSpan = 3;
+      td.className = 'log-empty';
+      td.textContent = 'Tiada rekod penyelenggaraan lagi.';
+      tr.appendChild(td);
+      tbody.appendChild(tr);
+      return;
+    }
+    records.forEach((rec, idx) => {
+      const tr = document.createElement('tr');
+      const tdDate = document.createElement('td');
+      tdDate.textContent = rec.date || '—';
+      const tdDesc = document.createElement('td');
+      tdDesc.textContent = rec.description || '';
+      const tdAct = document.createElement('td');
+      const delBtn = document.createElement('button');
+      delBtn.className = 'btn btn-danger';
+      delBtn.textContent = 'Padam';
+      delBtn.addEventListener('click', () => {
+        // inline confirm
+        if (delBtn.dataset.confirm === '1') {
+          getYearData(currentYear).maintenance.splice(idx, 1);
+          debouncedSave();
+          refreshTable();
+        } else {
+          delBtn.textContent = 'Pasti?';
+          delBtn.dataset.confirm = '1';
+          setTimeout(() => { delBtn.textContent = 'Padam'; delBtn.dataset.confirm = ''; }, 3000);
+        }
+      });
+      tdAct.appendChild(delBtn);
+      tr.appendChild(tdDate);
+      tr.appendChild(tdDesc);
+      tr.appendChild(tdAct);
+      tbody.appendChild(tr);
+    });
+  }
+  refreshTable();
+
+  addBtn.addEventListener('click', () => {
+    form.classList.toggle('open');
+    if (form.classList.contains('open')) dateInp.focus();
+  });
+  cancelBtn.addEventListener('click', () => {
+    form.classList.remove('open');
+    dateInp.value = '';
+    descInp.value = '';
+  });
+  saveBtn.addEventListener('click', () => {
+    const desc = descInp.value.trim();
+    if (!desc) { descInp.focus(); return; }
+    getYearData(currentYear).maintenance.push({ date: dateInp.value, description: desc });
+    debouncedSave();
+    refreshTable();
+    form.classList.remove('open');
+    dateInp.value = '';
+    descInp.value = '';
+  });
+
+  return wrap;
+}
+
+/* ── Activity log (E3) ── */
+function buildActivityLog(yd) {
+  const wrap = document.createElement('div');
+  wrap.className = 'log-section mt-20';
+
+  const hdr = document.createElement('div');
+  hdr.className = 'log-header';
+  const ttl = document.createElement('div');
+  ttl.className = 'log-title';
+  ttl.textContent = 'Log Aktiviti TeCC';
+  const addBtn = document.createElement('button');
+  addBtn.className = 'btn btn-primary';
+  addBtn.textContent = '+ Tambah aktiviti';
+  hdr.appendChild(ttl);
+  hdr.appendChild(addBtn);
+  wrap.appendChild(hdr);
+
+  /* Add form */
+  const form = document.createElement('div');
+  form.className = 'log-form card';
+  const formGrid = document.createElement('div');
+  formGrid.className = 'log-form-grid';
+
+  function makeField(lbl, id, type, placeholder) {
+    const grp = document.createElement('div');
+    grp.className = 'field-group';
+    const label = document.createElement('label');
+    label.textContent = lbl;
+    label.htmlFor = id;
+    let inp;
+    if (type === 'select') {
+      inp = document.createElement('select');
+      inp.className = 'field-input';
+      ACTIVITY_LEVELS.forEach(lvl => {
+        const o = document.createElement('option');
+        o.value = lvl;
+        o.textContent = lvl;
+        inp.appendChild(o);
+      });
+    } else {
+      inp = document.createElement('input');
+      inp.type = type;
+      inp.className = 'field-input';
+      if (placeholder) inp.placeholder = placeholder;
+    }
+    inp.id = id;
+    grp.appendChild(label);
+    grp.appendChild(inp);
+    return { grp, inp };
+  }
+
+  const { grp: dateGrp, inp: dateInp } = makeField('Tarikh', 'act-date-inp', 'date');
+  const { grp: titleGrp, inp: titleInp } = makeField('Tajuk aktiviti', 'act-title-inp', 'text', 'Nama aktiviti');
+  const { grp: levelGrp, inp: levelSel } = makeField('Peringkat', 'act-level-sel', 'select');
+
+  formGrid.appendChild(dateGrp);
+  formGrid.appendChild(titleGrp);
+  formGrid.appendChild(levelGrp);
+  form.appendChild(formGrid);
+
+  const formActions = document.createElement('div');
+  formActions.className = 'log-form-actions';
+  const cancelBtn = document.createElement('button');
+  cancelBtn.className = 'btn btn-secondary';
+  cancelBtn.textContent = 'Batal';
+  const saveBtn = document.createElement('button');
+  saveBtn.className = 'btn btn-primary';
+  saveBtn.textContent = 'Simpan';
+  formActions.appendChild(cancelBtn);
+  formActions.appendChild(saveBtn);
+  form.appendChild(formActions);
+  wrap.appendChild(form);
+
+  /* Table */
+  const tableWrap = document.createElement('div');
+  tableWrap.className = 'card';
+  const table = document.createElement('table');
+  table.className = 'log-table';
+  const thead = document.createElement('thead');
+  thead.innerHTML = '<tr><th>Tarikh</th><th>Tajuk</th><th>Peringkat</th><th></th></tr>';
+  table.appendChild(thead);
+  const tbody = document.createElement('tbody');
+  tbody.id = 'act-tbody';
+  table.appendChild(tbody);
+  tableWrap.appendChild(table);
+  wrap.appendChild(tableWrap);
+
+  function refreshTable() {
+    tbody.innerHTML = '';
+    const records = getYearData(currentYear).activities;
+    if (records.length === 0) {
+      const tr = document.createElement('tr');
+      const td = document.createElement('td');
+      td.colSpan = 4;
+      td.className = 'log-empty';
+      td.textContent = 'Tiada aktiviti direkodkan lagi.';
+      tr.appendChild(td);
+      tbody.appendChild(tr);
+      return;
+    }
+    records.forEach((rec, idx) => {
+      const tr = document.createElement('tr');
+      const tdDate = document.createElement('td');
+      tdDate.textContent = rec.date || '—';
+      const tdTitle = document.createElement('td');
+      tdTitle.textContent = rec.title || '';
+      const tdLevel = document.createElement('td');
+      const badge = document.createElement('span');
+      badge.className = `level-badge level-${rec.level}`;
+      badge.textContent = rec.level || '';
+      tdLevel.appendChild(badge);
+      const tdAct = document.createElement('td');
+      const delBtn = document.createElement('button');
+      delBtn.className = 'btn btn-danger';
+      delBtn.textContent = 'Padam';
+      delBtn.addEventListener('click', () => {
+        if (delBtn.dataset.confirm === '1') {
+          getYearData(currentYear).activities.splice(idx, 1);
+          debouncedSave();
+          refreshTable();
+        } else {
+          delBtn.textContent = 'Pasti?';
+          delBtn.dataset.confirm = '1';
+          setTimeout(() => { delBtn.textContent = 'Padam'; delBtn.dataset.confirm = ''; }, 3000);
+        }
+      });
+      tdAct.appendChild(delBtn);
+      tr.appendChild(tdDate);
+      tr.appendChild(tdTitle);
+      tr.appendChild(tdLevel);
+      tr.appendChild(tdAct);
+      tbody.appendChild(tr);
+    });
+  }
+  refreshTable();
+
+  addBtn.addEventListener('click', () => {
+    form.classList.toggle('open');
+    if (form.classList.contains('open')) titleInp.focus();
+  });
+  cancelBtn.addEventListener('click', () => {
+    form.classList.remove('open');
+    dateInp.value = '';
+    titleInp.value = '';
+  });
+  saveBtn.addEventListener('click', () => {
+    const t = titleInp.value.trim();
+    if (!t) { titleInp.focus(); return; }
+    getYearData(currentYear).activities.push({ date: dateInp.value, title: t, level: levelSel.value });
+    debouncedSave();
+    refreshTable();
+    form.classList.remove('open');
+    dateInp.value = '';
+    titleInp.value = '';
+  });
+
+  return wrap;
+}
+
+/* ═══════════════════════════════════════════════
+   STAR RATING PAGE
+═══════════════════════════════════════════════ */
+function renderStarRatingPage() {
+  const container = document.getElementById('sr-content');
+  container.innerHTML = '';
+
+  const yd = getYearData(currentYear);
+  const marks = getMarks(currentYear);
+  const { overall, stars, elementScores, anyMarked } = computeScore(marks);
+
+  /* ── Score + Stars header ── */
+  const headerGrid = document.createElement('div');
+  headerGrid.className = 'sr-header';
+
+  const scoreCard = document.createElement('div');
+  scoreCard.className = 'score-display';
+  const scoreLabel = document.createElement('div');
+  scoreLabel.className = 'score-label';
+  scoreLabel.textContent = `SKOR KESELURUHAN ${currentYear}`;
+  const scoreBig = document.createElement('div');
+  scoreBig.className = 'score-big';
+  if (!anyMarked) {
+    scoreBig.textContent = '—';
+  } else {
+    const num = document.createElement('span');
+    num.textContent = overall;
+    const denom = document.createElement('span');
+    denom.className = 'score-denom';
+    denom.textContent = ' / 100';
+    scoreBig.appendChild(num);
+    scoreBig.appendChild(denom);
+  }
+  const scoreMsg = document.createElement('div');
+  scoreMsg.className = 'score-msg';
+  if (anyMarked) {
+    scoreMsg.textContent = nextStarMsg(overall, stars);
+  } else {
+    scoreMsg.textContent = '0 daripada 17 item sudah dinilai.';
+  }
+  scoreCard.appendChild(scoreLabel);
+  scoreCard.appendChild(scoreBig);
+  scoreCard.appendChild(scoreMsg);
+
+  const starsCard = document.createElement('div');
+  starsCard.className = 'stars-display';
+  const starsLabel = document.createElement('div');
+  starsLabel.className = 'stars-label';
+  starsLabel.textContent = 'JULAT BINTANG';
+  const starsRow = document.createElement('div');
+  starsRow.className = 'stars-row';
+  starsRow.setAttribute('aria-label', anyMarked ? `${stars} bintang daripada 5` : 'Tiada bintang');
+  for (let i = 1; i <= 5; i++) {
+    const s = document.createElement('span');
+    s.className = 'star-icon ' + (anyMarked && i <= stars ? 'filled' : 'empty');
+    s.setAttribute('aria-hidden', 'true');
+    s.textContent = '★';
+    starsRow.appendChild(s);
+  }
+  const starsSub = document.createElement('div');
+  starsSub.className = 'stars-sub';
+  const assessedCount = Object.values(marks).filter(v => v !== null).length;
+  starsSub.textContent = `${assessedCount} / 17 item dinilai`;
+  starsCard.appendChild(starsLabel);
+  starsCard.appendChild(starsRow);
+  starsCard.appendChild(starsSub);
+
+  headerGrid.appendChild(scoreCard);
+  headerGrid.appendChild(starsCard);
+  container.appendChild(headerGrid);
+
+  /* ── Star scale bar ── */
+  const scaleWrap = document.createElement('div');
+  scaleWrap.className = 'card mb-16';
+  const scaleBody = document.createElement('div');
+  scaleBody.className = 'card-body';
+  const scaleTitle = document.createElement('div');
+  scaleTitle.className = 'star-scale-label';
+  scaleTitle.textContent = 'Skala 0–100 mengikut bintang';
+  scaleBody.appendChild(scaleTitle);
+
+  const track = document.createElement('div');
+  track.className = 'star-scale-track';
+  track.style.position = 'relative';
+  STAR_BANDS.forEach((band, i) => {
+    const seg = document.createElement('div');
+    seg.className = `star-band star-band-${i+1}`;
+    seg.style.width = band.pct + '%';
+    seg.setAttribute('title', `${band.label}: ${band.min}–${band.max - 1}`);
+    const lbl = document.createElement('span');
+    lbl.textContent = band.label;
+    seg.appendChild(lbl);
+    track.appendChild(seg);
+  });
+  if (anyMarked && overall !== null) {
+    const marker = document.createElement('div');
+    marker.className = 'score-marker';
+    marker.style.left = Math.min(overall, 100) + '%';
+    marker.setAttribute('aria-label', `Skor semasa: ${overall}`);
+    track.appendChild(marker);
+  }
+  scaleBody.appendChild(track);
+  const ticks = document.createElement('div');
+  ticks.className = 'star-scale-ticks';
+  [0, 21, 41, 61, 71, 100].forEach(v => {
+    const t = document.createElement('span');
+    t.textContent = v;
+    ticks.appendChild(t);
+  });
+  scaleBody.appendChild(ticks);
+  scaleWrap.appendChild(scaleBody);
+  container.appendChild(scaleWrap);
+
+  /* ── Element summaries ── */
+  const elemGrid = document.createElement('div');
+  elemGrid.className = 'element-summaries mb-16';
+  elementScores.forEach((es, idx) => {
+    const el = ELEMENTS[idx];
+    const card = document.createElement('div');
+    card.className = 'elem-card';
+    const nameEl = document.createElement('div');
+    nameEl.className = 'elem-card-name';
+    nameEl.textContent = es.name;
+    const weightEl = document.createElement('div');
+    weightEl.className = 'elem-card-weight';
+    weightEl.textContent = `${(es.weight * 100).toFixed(0)}% daripada skor`;
+    const scoreEl = document.createElement('div');
+    scoreEl.className = 'elem-card-score';
+    if (!anyMarked) {
+      scoreEl.textContent = '—';
+    } else {
+      scoreEl.textContent = es.pct100.toFixed(0);
+      const d = document.createElement('span');
+      d.className = 'score-denom';
+      d.textContent = ' / 100';
+      scoreEl.appendChild(d);
+    }
+    const barWrap = document.createElement('div');
+    barWrap.className = 'elem-bar-wrap';
+    barWrap.setAttribute('role', 'img');
+    const earnedPct = (es.earned / es.maxPossible) * 100;
+    const unassessedPct = (es.unassessed / es.maxPossible) * 100;
+    const lostPct = 100 - earnedPct - unassessedPct;
+    if (earnedPct > 0) { const b = document.createElement('div'); b.className = 'elem-bar-earned'; b.style.width = earnedPct + '%'; barWrap.appendChild(b); }
+    if (unassessedPct > 0) { const b = document.createElement('div'); b.className = 'elem-bar-unassessed'; b.style.width = unassessedPct + '%'; barWrap.appendChild(b); }
+    if (lostPct > 0.01) { const b = document.createElement('div'); b.className = 'elem-bar-lost'; b.style.width = lostPct + '%'; barWrap.appendChild(b); }
+    const subEl = document.createElement('div');
+    subEl.className = 'elem-card-sub';
+    const contrib = (es.earned / es.maxPossible * 100 * es.weight).toFixed(1);
+    const unassessedContrib = (es.unassessed / es.maxPossible * 100 * es.weight).toFixed(1);
+    subEl.textContent = `Sumbang ${contrib} daripada ${(es.weight*100).toFixed(0)} mata · ${unassessedContrib} mata belum dinilai`;
+    card.appendChild(nameEl);
+    card.appendChild(weightEl);
+    card.appendChild(scoreEl);
+    card.appendChild(barWrap);
+    card.appendChild(subEl);
+    elemGrid.appendChild(card);
+  });
+  container.appendChild(elemGrid);
+
+  /* ── Bottom grid: Top gaps + Evidence status ── */
+  const bottomGrid = document.createElement('div');
+  bottomGrid.className = 'sr-bottom-grid mb-16';
+
+  /* Top 5 gaps */
+  const gapsCard = document.createElement('div');
+  gapsCard.className = 'card';
+  const gapsBody = document.createElement('div');
+  gapsBody.className = 'card-body';
+  const gapsTitle = document.createElement('div');
+  gapsTitle.className = 'top-gaps-title';
+  gapsTitle.textContent = 'Di mana mata masih ada';
+  gapsBody.appendChild(gapsTitle);
+
+  const gaps = [];
+  ELEMENTS.forEach(el => {
+    el.items.forEach(it => {
+      const v = marks[it.id];
+      const earned = (v === null || v === undefined) ? 0 : Number(v);
+      const gap = it.max - earned;
+      if (gap > 0) {
+        const overallGap = (gap / 100) * el.weight * 100;
+        gaps.push({ item: it, element: el, gap, overallGap, isUnassessed: v === null || v === undefined || v === '' });
+      }
+    });
+  });
+  gaps.sort((a, b) => b.overallGap - a.overallGap);
+  const top5 = gaps.slice(0, 5);
+
+  if (top5.length === 0) {
+    const msg = document.createElement('p');
+    msg.className = 'text-muted text-sm';
+    msg.textContent = 'Semua item sudah mendapat markah penuh!';
+    gapsBody.appendChild(msg);
+  } else {
+    top5.forEach(g => {
+      const row = document.createElement('div');
+      row.className = 'gap-row';
+      const nameWrap = document.createElement('div');
+      nameWrap.className = 'gap-item-name';
+      const nameLine = document.createElement('div');
+      nameLine.textContent = `${g.item.id}. ${g.item.name}`;
+      const subLine = document.createElement('div');
+      subLine.className = 'gap-item-sub';
+      subLine.textContent = (g.isUnassessed ? 'Belum dinilai · ' : '') + `Elemen ${g.element.id.replace('e', '')}`;
+      nameWrap.appendChild(nameLine);
+      nameWrap.appendChild(subLine);
+      const pts = document.createElement('div');
+      pts.className = 'gap-points';
+      pts.textContent = `+${g.overallGap.toFixed(1)} mata`;
+      row.appendChild(nameWrap);
+      row.appendChild(pts);
+      gapsBody.appendChild(row);
+    });
+  }
+  gapsCard.appendChild(gapsBody);
+
+  /* Evidence status */
+  const evCard = document.createElement('div');
+  evCard.className = 'card';
+  const evBody = document.createElement('div');
+  evBody.className = 'card-body';
+  const evTitle = document.createElement('div');
+  evTitle.className = 'evidence-summary-title';
+  evTitle.textContent = 'Status bukti';
+  const statusCounts = { 'Ada bukti': 0, 'Separa': 0, 'Tiada': 0, 'Belum semak': 0 };
+  ELEMENTS.forEach(el => el.items.forEach(it => {
+    const s = yd.items[it.id]?.status || 'Belum semak';
+    if (statusCounts[s] !== undefined) statusCounts[s]++;
+  }));
+  const evBarWrap = document.createElement('div');
+  evBarWrap.className = 'elem-bar-wrap';
+  evBarWrap.style.height = '20px';
+  evBarWrap.style.marginBottom = '12px';
+  evBarWrap.setAttribute('role', 'img');
+  evBarWrap.setAttribute('aria-label', 'Taburan status bukti');
+  const evColors = { 'Ada bukti': '#16a34a', 'Separa': '#ea580c', 'Tiada': '#dc2626', 'Belum semak': '#d1d5db' };
+  Object.entries(statusCounts).forEach(([s, cnt]) => {
+    if (cnt > 0) {
+      const b = document.createElement('div');
+      b.style.width = (cnt / 17 * 100) + '%';
+      b.style.background = evColors[s];
+      b.style.height = '100%';
+      evBarWrap.appendChild(b);
+    }
+  });
+  evBody.appendChild(evTitle);
+  evBody.appendChild(evBarWrap);
+  [
+    { key: 'Ada bukti', cls: 'ada', label: 'Ada bukti' },
+    { key: 'Tiada', cls: 'tiada', label: 'Tiada' },
+    { key: 'Separa', cls: 'separa', label: 'Separa' },
+    { key: 'Belum semak', cls: 'belum', label: 'Belum semak' },
+  ].forEach(ev => {
+    const row = document.createElement('div');
+    row.className = 'ev-status-row';
+    const dot = document.createElement('span');
+    dot.className = 'ev-dot ' + ev.cls;
+    dot.setAttribute('aria-hidden', 'true');
+    const lbl = document.createElement('span');
+    lbl.textContent = ev.label;
+    const cnt = document.createElement('span');
+    cnt.className = 'ev-count';
+    cnt.textContent = statusCounts[ev.key];
+    row.appendChild(dot);
+    row.appendChild(lbl);
+    row.appendChild(cnt);
+    evBody.appendChild(row);
+  });
+  const evNote = document.createElement('div');
+  evNote.className = 'ev-note';
+  evNote.textContent = 'Status bukti tak mengubah skor. Skor ikut markah yang diisi dalam rubrik.';
+  evBody.appendChild(evNote);
+  evCard.appendChild(evBody);
+
+  bottomGrid.appendChild(gapsCard);
+  bottomGrid.appendChild(evCard);
+  container.appendChild(bottomGrid);
+
+  /* ── Full Rubric Table ── */
+  ELEMENTS.forEach(el => {
+    const section = document.createElement('div');
+    section.className = 'rubric-section';
+    const header = document.createElement('div');
+    header.className = 'rubric-section-header';
+    const htitle = document.createElement('span');
+    htitle.className = 'rubric-section-title';
+    htitle.textContent = el.name;
+    const hweight = document.createElement('span');
+    hweight.className = 'rubric-section-weight';
+    hweight.textContent = `${(el.weight * 100).toFixed(0)}% daripada skor`;
+    header.appendChild(htitle);
+    header.appendChild(hweight);
+    section.appendChild(header);
+
+    el.items.forEach(it => {
+      const row = document.createElement('div');
+      row.className = 'rubric-item';
+      const numEl = document.createElement('div');
+      numEl.className = 'rubric-num';
+      numEl.textContent = it.id;
+      const infoEl = document.createElement('div');
+      const nameEl = document.createElement('div');
+      nameEl.className = 'rubric-name';
+      nameEl.textContent = it.name;
+      const maxEl = document.createElement('div');
+      maxEl.className = 'rubric-max';
+      maxEl.textContent = `Maks: ${it.max} mata`;
+      infoEl.appendChild(nameEl);
+      infoEl.appendChild(maxEl);
+
+      const inputsEl = document.createElement('div');
+      inputsEl.className = 'rubric-inputs';
+
+      const statusWrap = document.createElement('div');
+      statusWrap.className = 'mark-input-wrap';
+      const statusLabel = document.createElement('label');
+      const statusId = `status-sr-${currentYear}-${it.id}`;
+      statusLabel.htmlFor = statusId;
+      statusLabel.textContent = 'Status bukti';
+      const statusSel = document.createElement('select');
+      statusSel.id = statusId;
+      statusSel.className = 'mark-input';
+      statusSel.style.width = '120px';
+      ['Belum semak','Ada bukti','Separa','Tiada'].forEach(opt => {
+        const o = document.createElement('option');
+        o.value = opt;
+        o.textContent = opt;
+        statusSel.appendChild(o);
+      });
+      statusSel.value = getYearData(currentYear).items[it.id]?.status || 'Belum semak';
+      statusSel.addEventListener('change', () => {
+        getYearData(currentYear).items[it.id].status = statusSel.value;
+        debouncedSave();
+      });
+      statusWrap.appendChild(statusLabel);
+      statusWrap.appendChild(statusSel);
+
+      const markWrap = document.createElement('div');
+      markWrap.className = 'mark-input-wrap';
+      const markLabel = document.createElement('label');
+      const markId = `mark-sr-${currentYear}-${it.id}`;
+      markLabel.htmlFor = markId;
+      markLabel.textContent = 'Markah';
+      const markInp = document.createElement('input');
+      markInp.type = 'number';
+      markInp.id = markId;
+      markInp.className = 'mark-input';
+      markInp.min = '0';
+      markInp.max = it.max;
+      markInp.step = '0.5';
+      markInp.placeholder = '—';
+      markInp.setAttribute('aria-label', `Markah untuk ${it.name}`);
+      const storedMark = getYearData(currentYear).items[it.id]?.mark;
+      if (storedMark !== '' && storedMark !== null && storedMark !== undefined) {
+        markInp.value = storedMark;
+      }
+      markInp.addEventListener('input', () => {
+        let v = markInp.value;
+        if (v !== '') {
+          let n = parseFloat(v);
+          if (isNaN(n)) n = 0;
+          if (n < 0) n = 0;
+          if (n > it.max) n = it.max;
+          v = n;
+          markInp.value = v;
+        }
+        getYearData(currentYear).items[it.id].mark = v === '' ? '' : v;
+        debouncedSave();
+        scheduleScoreRefresh();
+      });
+      markWrap.appendChild(markLabel);
+      markWrap.appendChild(markInp);
+
+      const ofEl = document.createElement('div');
+      ofEl.className = 'mark-of';
+      ofEl.textContent = `/ ${it.max}`;
+
+      inputsEl.appendChild(statusWrap);
+      inputsEl.appendChild(markWrap);
+      inputsEl.appendChild(ofEl);
+      row.appendChild(numEl);
+      row.appendChild(infoEl);
+      row.appendChild(inputsEl);
+      section.appendChild(row);
+    });
+    container.appendChild(section);
+  });
+}
+
+let scoreRefreshTimer = null;
+function scheduleScoreRefresh() {
+  clearTimeout(scoreRefreshTimer);
+  scoreRefreshTimer = setTimeout(() => {
+    if (currentPage === 'starrating') renderStarRatingPage();
+  }, 300);
+}
+
+/* ═══════════════════════════════════════════════
+   IMAGE UPLOAD & EVIDENCE
+═══════════════════════════════════════════════ */
+
+/* Resize an image File to ≤1000px wide, return JPEG data-URL */
+function resizeImage(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = e => {
+      const img = new Image();
+      img.onerror = reject;
+      img.onload = () => {
+        const maxW = 1000;
+        let w = img.width, h = img.height;
+        if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', 0.85));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+/* Uploader name prompt — inline non-blocking form returned as a Promise */
+function askUploaderInfo() {
+  return new Promise(resolve => {
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.style.zIndex = '1100';
+    const box = document.createElement('div');
+    box.className = 'modal-box';
+    box.style.maxWidth = '400px';
+
+    const title = document.createElement('div');
+    title.className = 'section-title mb-12';
+    title.textContent = 'Maklumat pemuat naik';
+
+    const nameGrp = document.createElement('div');
+    nameGrp.className = 'field-group mb-12';
+    const nameLbl = document.createElement('label');
+    nameLbl.textContent = 'Nama pemuat naik';
+    nameLbl.htmlFor = 'uploader-name-inp';
+    const nameInp = document.createElement('input');
+    nameInp.type = 'text';
+    nameInp.id = 'uploader-name-inp';
+    nameInp.className = 'field-input';
+    nameInp.placeholder = 'Nama anda';
+    nameGrp.appendChild(nameLbl);
+    nameGrp.appendChild(nameInp);
+
+    const noteGrp = document.createElement('div');
+    noteGrp.className = 'field-group mb-12';
+    const noteLbl = document.createElement('label');
+    noteLbl.textContent = 'Nota (pilihan)';
+    noteLbl.htmlFor = 'uploader-note-inp';
+    const noteInp = document.createElement('input');
+    noteInp.type = 'text';
+    noteInp.id = 'uploader-note-inp';
+    noteInp.className = 'field-input';
+    noteInp.placeholder = 'Keterangan imej';
+    noteGrp.appendChild(noteLbl);
+    noteGrp.appendChild(noteInp);
+
+    const actions = document.createElement('div');
+    actions.className = 'log-form-actions';
+    const cancelBtn = document.createElement('button');
+    cancelBtn.className = 'btn btn-secondary';
+    cancelBtn.textContent = 'Batal';
+    const okBtn = document.createElement('button');
+    okBtn.className = 'btn btn-primary';
+    okBtn.textContent = 'Muat naik';
+
+    cancelBtn.addEventListener('click', () => { document.body.removeChild(overlay); resolve(null); });
+    okBtn.addEventListener('click', () => {
+      document.body.removeChild(overlay);
+      resolve({ uploader: nameInp.value.trim() || 'Tidak diketahui', note: noteInp.value.trim() });
+    });
+    // Enter key
+    [nameInp, noteInp].forEach(inp => inp.addEventListener('keydown', e => { if (e.key === 'Enter') okBtn.click(); }));
+
+    actions.appendChild(cancelBtn);
+    actions.appendChild(okBtn);
+    box.appendChild(title);
+    box.appendChild(nameGrp);
+    box.appendChild(noteGrp);
+    box.appendChild(actions);
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+    setTimeout(() => nameInp.focus(), 50);
+  });
+}
+
+async function handleImageUpload(fileInput, itemId, thumbStripEl) {
+  const files = Array.from(fileInput.files);
+  if (!files.length) return;
+  fileInput.value = ''; // reset so same file can be re-selected
+
+  const info = await askUploaderInfo();
+  if (!info) return; // cancelled
+
+  const now = new Date();
+  const dateStr = now.toISOString().slice(0, 10) + ' ' + now.toTimeString().slice(0, 5);
+
+  for (const file of files) {
+    let dataUrl;
+    try {
+      dataUrl = await resizeImage(file);
+    } catch(e) {
+      // show inline error instead of alert
+      const errEl = document.getElementById(`upload-zone-${itemId}`);
+      if (errEl) {
+        const msg = document.createElement('div');
+        msg.style.cssText = 'color:var(--red);font-size:12px;margin-top:4px;';
+        msg.textContent = 'Gagal memproses imej: ' + file.name;
+        errEl.appendChild(msg);
+        setTimeout(() => msg.remove(), 5000);
+      }
+      continue;
+    }
+
+    const imgObj = { id: Date.now() + Math.random(), dataUrl, uploader: info.uploader, note: info.note, date: dateStr, itemId };
+
+    // Try to save
+    const yd = getYearData(currentYear);
+    if (!yd.items[itemId].images) yd.items[itemId].images = [];
+
+    // Set status to Ada bukti if no status yet
+    if (!yd.items[itemId].status || yd.items[itemId].status === 'Belum semak') {
+      yd.items[itemId].status = 'Ada bukti';
+      // update select on the page if present
+      const sel = document.getElementById(`status-ep-${currentYear}-${itemId}`);
+      if (sel) sel.value = 'Ada bukti';
+    }
+
+    yd.items[itemId].images.push(imgObj);
+
+    try {
+      localStorage.setItem(LS_KEY, JSON.stringify(appData));
+      showSaveIndicator('Semua perubahan disimpan');
+    } catch(e) {
+      if (e.name === 'QuotaExceededError' || e.code === 22) {
+        // remove the image we just added since it didn't save
+        yd.items[itemId].images.pop();
+        // Show inline error
+        const errEl = document.getElementById(`upload-zone-${itemId}`);
+        if (errEl) {
+          const msg = document.createElement('div');
+          msg.style.cssText = 'color:var(--red);font-size:12px;margin-top:4px;';
+          msg.textContent = '⚠ Storan penuh! Imej tidak disimpan. Sila padam imej lama atau eksport data.';
+          errEl.appendChild(msg);
+          setTimeout(() => msg.remove(), 8000);
+        }
+        continue;
+      } else {
+        showSaveIndicator('⚠ Gagal simpan: ' + e.message, true);
+      }
+    }
+  }
+
+  renderThumbs(itemId, thumbStripEl);
+}
+
+function renderThumbs(itemId, container) {
+  container.innerHTML = '';
+  const yd = getYearData(currentYear);
+  const images = yd.items[itemId]?.images || [];
+  images.forEach(img => {
+    const thumb = document.createElement('div');
+    thumb.className = 'thumb-item';
+    thumb.setAttribute('role', 'button');
+    thumb.setAttribute('tabindex', '0');
+    thumb.setAttribute('aria-label', `Bukti: ${img.note || img.uploader}`);
+    const i = document.createElement('img');
+    i.src = img.dataUrl;
+    i.alt = img.note || 'Bukti';
+    thumb.appendChild(i);
+    const open = () => openImageModal(img, itemId, container);
+    thumb.addEventListener('click', open);
+    thumb.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') open(); });
+    container.appendChild(thumb);
+  });
+}
+
+/* ── Image modal ── */
+let modalDeleteHandler = null;
+
+function openImageModal(img, itemId, thumbStripEl) {
+  const modal = document.getElementById('img-modal');
+  const imgEl = document.getElementById('modal-img');
+  const metaItem = document.getElementById('modal-meta-item');
+  const metaUploader = document.getElementById('modal-meta-uploader');
+  const metaDate = document.getElementById('modal-meta-date');
+  const metaNote = document.getElementById('modal-meta-note');
+  const deleteBtn = document.getElementById('modal-delete-btn');
+
+  imgEl.src = img.dataUrl;
+  imgEl.alt = img.note || 'Bukti';
+
+  // use textContent for meta
+  metaItem.textContent = '';
+  const itemName = ITEM_MAP[itemId]?.name || `Item ${itemId}`;
+  const strong1 = document.createElement('strong');
+  strong1.textContent = 'Item: ';
+  metaItem.appendChild(strong1);
+  metaItem.appendChild(document.createTextNode(itemName));
+
+  metaUploader.textContent = '';
+  const strong2 = document.createElement('strong');
+  strong2.textContent = 'Dimuat naik oleh: ';
+  metaUploader.appendChild(strong2);
+  metaUploader.appendChild(document.createTextNode(img.uploader || '—'));
+
+  metaDate.textContent = '';
+  const strong3 = document.createElement('strong');
+  strong3.textContent = 'Tarikh: ';
+  metaDate.appendChild(strong3);
+  metaDate.appendChild(document.createTextNode(img.date || '—'));
+
+  metaNote.textContent = '';
+  if (img.note) {
+    const strong4 = document.createElement('strong');
+    strong4.textContent = 'Nota: ';
+    metaNote.appendChild(strong4);
+    metaNote.appendChild(document.createTextNode(img.note));
+  }
+
+  // Remove old delete handler
+  if (modalDeleteHandler) deleteBtn.removeEventListener('click', modalDeleteHandler);
+  deleteBtn.dataset.confirm = '';
+  deleteBtn.textContent = 'Padam imej';
+
+  modalDeleteHandler = () => {
+    if (deleteBtn.dataset.confirm === '1') {
+      const yd = getYearData(currentYear);
+      const arr = yd.items[itemId]?.images || [];
+      const idx = arr.findIndex(x => x.id === img.id);
+      if (idx !== -1) arr.splice(idx, 1);
+      debouncedSave();
+      closeImageModal();
+      if (thumbStripEl) renderThumbs(itemId, thumbStripEl);
+      // refresh galeri if open
+      if (currentPage === 'galeri') renderGaleriPage();
+    } else {
+      deleteBtn.textContent = 'Pasti padam?';
+      deleteBtn.dataset.confirm = '1';
+      setTimeout(() => { deleteBtn.textContent = 'Padam imej'; deleteBtn.dataset.confirm = ''; }, 3000);
+    }
+  };
+  deleteBtn.addEventListener('click', modalDeleteHandler);
+
+  modal.classList.remove('hidden');
+  document.getElementById('modal-close-btn').focus();
+}
+
+function closeImageModal() {
+  const modal = document.getElementById('img-modal');
+  modal.classList.add('hidden');
+  document.getElementById('modal-img').src = '';
+}
+
+/* ═══════════════════════════════════════════════
+   GALERI BUKTI PAGE
+═══════════════════════════════════════════════ */
+function renderGaleriPage() {
+  const container = document.getElementById('galeri-content');
+  container.innerHTML = '';
+
+  // Collect all images across all items for current year
+  const yd = getYearData(currentYear);
+  const allImages = [];
+  ELEMENTS.forEach(el => {
+    el.items.forEach(it => {
+      const images = yd.items[it.id]?.images || [];
+      images.forEach(img => {
+        allImages.push({ ...img, itemId: it.id, itemName: it.name, elementName: el.name, elementId: el.id });
+      });
+    });
+  });
+
+  // Filter state
+  let activeElement = 'all';
+  let activeItem = 'all';
+
+  const filtersRow = document.createElement('div');
+  filtersRow.className = 'gallery-filters';
+
+  const lbl = document.createElement('span');
+  lbl.className = 'gallery-filter-label';
+  lbl.textContent = 'Tapis:';
+  filtersRow.appendChild(lbl);
+
+  const allBtn = document.createElement('button');
+  allBtn.className = 'filter-btn active';
+  allBtn.textContent = 'Semua';
+  allBtn.addEventListener('click', () => { activeElement = 'all'; activeItem = 'all'; renderGrid(); updateFilters(); });
+  filtersRow.appendChild(allBtn);
+
+  ELEMENTS.forEach(el => {
+    const btn = document.createElement('button');
+    btn.className = 'filter-btn';
+    btn.textContent = `Elemen ${el.id.replace('e','')}`;
+    btn.addEventListener('click', () => { activeElement = el.id; activeItem = 'all'; renderGrid(); updateFilters(); });
+    btn.dataset.elid = el.id;
+    filtersRow.appendChild(btn);
+  });
+
+  // Item filter (populated based on element selection)
+  const itemFilterRow = document.createElement('div');
+  itemFilterRow.className = 'gallery-filters';
+  itemFilterRow.id = 'item-filter-row';
+  itemFilterRow.style.display = 'none';
+
+  container.appendChild(filtersRow);
+  container.appendChild(itemFilterRow);
+
+  function updateFilters() {
+    // Update element button states
+    filtersRow.querySelectorAll('.filter-btn').forEach(b => {
+      b.classList.toggle('active',
+        (b.textContent === 'Semua' && activeElement === 'all') ||
+        (b.dataset.elid === activeElement)
+      );
+    });
+    // Populate item filters
+    itemFilterRow.innerHTML = '';
+    if (activeElement !== 'all') {
+      itemFilterRow.style.display = 'flex';
+      const el = ELEMENTS.find(e => e.id === activeElement);
+      const lblI = document.createElement('span');
+      lblI.className = 'gallery-filter-label';
+      lblI.textContent = 'Item:';
+      itemFilterRow.appendChild(lblI);
+
+      const allItemBtn = document.createElement('button');
+      allItemBtn.className = 'filter-btn' + (activeItem === 'all' ? ' active' : '');
+      allItemBtn.textContent = 'Semua';
+      allItemBtn.addEventListener('click', () => { activeItem = 'all'; renderGrid(); updateFilters(); });
+      itemFilterRow.appendChild(allItemBtn);
+
+      el.items.forEach(it => {
+        const b = document.createElement('button');
+        b.className = 'filter-btn' + (activeItem === it.id ? ' active' : '');
+        b.textContent = `${it.id}. ${it.name.slice(0, 24)}${it.name.length > 24 ? '…' : ''}`;
+        b.addEventListener('click', () => { activeItem = it.id; renderGrid(); updateFilters(); });
+        itemFilterRow.appendChild(b);
+      });
+    } else {
+      itemFilterRow.style.display = 'none';
+    }
+  }
+
+  const gridEl = document.createElement('div');
+  gridEl.className = 'gallery-grid';
+  gridEl.id = 'galeri-grid';
+  container.appendChild(gridEl);
+
+  function renderGrid() {
+    gridEl.innerHTML = '';
+    const filtered = allImages.filter(img => {
+      if (activeElement !== 'all' && img.elementId !== activeElement) return false;
+      if (activeItem !== 'all' && img.itemId !== activeItem) return false;
+      return true;
+    });
+
+    if (filtered.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'gallery-empty';
+      empty.style.gridColumn = '1/-1';
+      empty.textContent = allImages.length === 0
+        ? 'Tiada bukti dimuat naik lagi. Pergi ke halaman elemen untuk muat naik.'
+        : 'Tiada bukti untuk penapis yang dipilih.';
+      gridEl.appendChild(empty);
+      return;
+    }
+
+    filtered.forEach(img => {
+      const card = document.createElement('div');
+      card.className = 'gallery-card';
+      card.setAttribute('role', 'button');
+      card.setAttribute('tabindex', '0');
+      card.setAttribute('aria-label', img.itemName + ' – ' + (img.note || img.uploader));
+
+      const imgEl = document.createElement('img');
+      imgEl.src = img.dataUrl;
+      imgEl.alt = img.note || img.itemName;
+      imgEl.loading = 'lazy';
+
+      const meta = document.createElement('div');
+      meta.className = 'gallery-card-meta';
+      const strong = document.createElement('strong');
+      strong.textContent = `${img.itemId}. ${img.itemName}`;
+      const uploaderLine = document.createElement('span');
+      uploaderLine.textContent = (img.uploader || '—') + ' · ' + (img.date || '—').slice(0, 10);
+
+      meta.appendChild(strong);
+      meta.appendChild(document.createElement('br'));
+      meta.appendChild(uploaderLine);
+
+      card.appendChild(imgEl);
+      card.appendChild(meta);
+
+      // find thumbStrip for this item (may not exist if on gallery page)
+      const open = () => openImageModal(img, img.itemId, null);
+      card.addEventListener('click', open);
+      card.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') open(); });
+      gridEl.appendChild(card);
+    });
+  }
+
+  renderGrid();
+}
+
+/* ═══════════════════════════════════════════════
+   PENGGUNAAN PELAJAR — STUDENT RESPONSE DATA
+═══════════════════════════════════════════════ */
+const RESPONS = [
+{"masa":"2026-04-15 11:35","program":"Diploma Bioteknologi","semester":6,"kursus":"DYB30083 MICROBIOLOGY","bidang":"Sains / Teknologi","jawapan":[5,5,5,5,5,5,5,5,5,5,5,5,3,3,3,3,3,3,5,5],"berguna":"","cabaran":"","cadangan":"","rating":5},
+{"masa":"2026-04-15 11:35","program":"Diploma Bioteknologi","semester":3,"kursus":"DYB30083 MICROBIOLOGY","bidang":"Sains / Teknologi","jawapan":[4,4,4,4,4,4,5,5,3,4,4,4,4,4,4,4,4,4,4,4],"berguna":"","cabaran":"","cadangan":"","rating":5},
+{"masa":"2026-04-15 11:36","program":"Diploma Bioteknologi","semester":3,"kursus":"DYB30083 MICROBIOLOGY","bidang":"Sains / Teknologi","jawapan":[5,5,5,5,5,5,3,3,3,3,3,3,5,5,5,5,5,5,5,5],"berguna":"epson","cabaran":"wifi","cadangan":"wifi","rating":5},
+{"masa":"2026-04-15 11:37","program":"Diploma Bioteknologi","semester":3,"kursus":"DYB30083 MICROBIOLOGY","bidang":"Sains / Teknologi","jawapan":[5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5],"berguna":"slide and aircond","cabaran":"no have","cadangan":"repair the certain ciling","rating":4},
+{"masa":"2026-04-15 11:37","program":"Diploma Bioteknologi","semester":5,"kursus":"DYB30083 MICROBIOLOGY","bidang":"Sains / Teknologi","jawapan":[4,4,4,4,4,4,3,3,3,3,3,3,3,3,3,3,3,3,3,3],"berguna":"komputer","cabaran":".","cadangan":"terangkan layar","rating":5},
+{"masa":"2026-04-15 11:37","program":"Diploma Bioteknologi","semester":3,"kursus":"DYB30083 MICROBIOLOGY","bidang":"Sains / Teknologi","jawapan":[5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5],"berguna":"tv","cabaran":"no difficulty during the class","cadangan":"","rating":5},
+{"masa":"2026-04-15 11:37","program":"Diploma Bioteknologi","semester":3,"kursus":"DYB30083 MICROBIOLOGY","bidang":"Sains / Teknologi","jawapan":[5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5],"berguna":"smart board","cabaran":"","cadangan":"","rating":5},
+{"masa":"2026-04-15 11:38","program":"Diploma Bioteknologi","semester":3,"kursus":"DYB30083 MICROBIOLOGY","bidang":"Sains / Teknologi","jawapan":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3],"berguna":"","cabaran":"","cadangan":"","rating":4},
+{"masa":"2026-04-15 11:38","program":"Diploma Bioteknologi","semester":3,"kursus":"DYB30083 MICROBIOLOGY","bidang":"Sains / Teknologi","jawapan":[5,4,5,5,5,5,5,5,5,5,5,4,5,4,5,5,5,5,5,5],"berguna":"Quiziz","cabaran":"Line","cadangan":"Line","rating":5},
+{"masa":"2026-04-15 11:38","program":"Diploma Bioteknologi","semester":3,"kursus":"DYB30083 MICROBIOLOGY","bidang":"Sains / Teknologi","jawapan":[4,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5],"berguna":"projector touch","cabaran":"wifi slow","cadangan":"improve wifi","rating":5},
+{"masa":"2026-04-15 11:38","program":"Diploma Bioteknologi","semester":6,"kursus":"DYB30083 MICROBIOLOGY","bidang":"Sains / Teknologi","jawapan":[3,4,4,4,4,5,3,3,3,4,4,3,3,3,3,3,3,3,5,4],"berguna":"ade monitor","cabaran":"susunan meja bulat jdi agak susah utk pndg whiteboard","cadangan":"tlg adekan wifi student kat sini sbb wifi student tk dpt","rating":4},
+{"masa":"2026-04-15 11:38","program":"Diploma Bioteknologi","semester":3,"kursus":"DYB30083 MICROBIOLOGY","bidang":"Sains / Teknologi","jawapan":[4,5,4,4,5,5,5,5,5,5,4,4,4,5,5,5,4,5,4,5],"berguna":"projector","cabaran":"quizez","cadangan":"no suggest","rating":5},
+{"masa":"2026-04-15 11:38","program":"Diploma Bioteknologi","semester":3,"kursus":"DYB30083 MICROBIOLOGY","bidang":"Sains / Teknologi","jawapan":[4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4],"berguna":"-","cabaran":"-","cadangan":"-","rating":4},
+{"masa":"2026-04-15 11:39","program":"Diploma Bioteknologi","semester":3,"kursus":"DYB30083 MICROBIOLOGY","bidang":"Sains / Teknologi","jawapan":[5,5,5,4,4,5,4,3,4,5,4,4,4,4,4,5,4,5,5,5],"berguna":"the projector that you can write with it, its useful for our lectures highlighting the most important parts and made a clearer point","cabaran":"maybe the design of the table ?? the arrangement does seem pretty close to each others and we are often bumping our backs together","cadangan":"maybe the projector on the left room where the light aren't bright enough","rating":4},
+{"masa":"2026-04-15 11:39","program":"Diploma Bioteknologi","semester":3,"kursus":"DYB30083 MICROBIOLOGY","bidang":"Sains / Teknologi","jawapan":[5,5,4,5,5,5,4,4,4,4,4,4,3,3,3,3,3,3,4,4],"berguna":"The both side screen","cabaran":"Nothing","cadangan":"-","rating":5},
+{"masa":"2026-04-15 11:39","program":"Diploma Bioteknologi","semester":3,"kursus":"DYB30083 MICROBIOLOGY","bidang":"Sains / Teknologi","jawapan":[4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4],"berguna":"Colourful","cabaran":"Nothing","cadangan":"Everything okay","rating":5},
+{"masa":"2026-04-15 11:39","program":"Diploma Bioteknologi","semester":3,"kursus":"DYB30083 MICROBIOLOGY","bidang":"Sains / Teknologi","jawapan":[5,5,5,5,5,5,4,4,4,4,4,5,5,5,5,5,5,5,5,5],"berguna":"Collaborative Screens/Sharing","cabaran":"","cadangan":"Advanced Annotation Tools","rating":4},
+{"masa":"2026-04-15 11:40","program":"Diploma Bioteknologi","semester":3,"kursus":"DYB30083 MICROBIOLOGY","bidang":"Sains / Teknologi","jawapan":[5,5,5,5,5,5,5,5,4,5,5,5,5,5,5,5,5,5,3,4],"berguna":"can study easily","cabaran":"line phone to fine information","cadangan":"suggestion is wifi sistem","rating":4},
+{"masa":"2026-04-16 08:47","program":"Diploma Bioteknologi","semester":3,"kursus":"DYB30083 MICROBIOLOGY","bidang":"Sains / Teknologi","jawapan":[5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5],"berguna":"The lcd projector and AC","cabaran":"","cadangan":"","rating":5},
+{"masa":"2026-04-16 08:48","program":"Diploma Bioteknologi","semester":3,"kursus":"DYB30083 MICROBIOLOGY","bidang":"Sains / Teknologi","jawapan":[5,5,5,5,5,5,5,5,4,4,4,4,4,5,5,5,4,5,5,4],"berguna":"aircond and LCD projector","cabaran":"No","cadangan":"Pc problem","rating":5},
+{"masa":"2026-04-16 08:48","program":"Diploma Bioteknologi","semester":3,"kursus":"DYB30083 MICROBIOLOGY","bidang":"Sains / Teknologi","jawapan":[5,5,5,5,5,5,5,5,5,5,5,5,4,4,4,5,5,5,5,5],"berguna":"","cabaran":"nothing all perfect","cadangan":"sediakan selimut or jaket supaya saya tk beku dalam ini.","rating":5},
+{"masa":"2026-04-16 08:48","program":"Diploma Bioteknologi","semester":3,"kursus":"DYB30083 MICROBIOLOGY","bidang":"Sains / Teknologi","jawapan":[4,4,5,4,5,5,5,4,5,5,5,5,4,5,4,5,4,5,5,5],"berguna":"projecter, smart board","cabaran":"need more time","cadangan":"wifi","rating":5},
+{"masa":"2026-04-16 08:48","program":"Diploma Bioteknologi","semester":3,"kursus":"DYB30083 MICROBIOLOGY","bidang":"Sains / Teknologi","jawapan":[5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5],"berguna":"The most useful feature of TECC 2.0 is its interactive learning materials and organized content. It allows me to access notes, activities, and resources in one place, which makes it easier to understand topics and revise efficiently. The system also supports self-paced learning, helping me to learn according to my own speed.","cabaran":"too prefectt and comfortable for study","cadangan":"PC problem","rating":5},
+{"masa":"2026-04-16 08:48","program":"Diploma Bioteknologi","semester":3,"kursus":"DYB30083 MICROBIOLOGY","bidang":"Sains / Teknologi","jawapan":[5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5],"berguna":"projected","cabaran":"need more time","cadangan":"improving wifi problems","rating":5},
+{"masa":"2026-04-16 08:48","program":"Diploma Bioteknologi","semester":3,"kursus":"DYB30083 MICROBIOLOGY","bidang":"Sains / Teknologi","jawapan":[4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4],"berguna":"smart board","cabaran":"no challenges","cadangan":"repair the pc for lecture","rating":5},
+{"masa":"2026-04-16 08:48","program":"Diploma Bioteknologi","semester":3,"kursus":"DYB30083 MICROBIOLOGY","bidang":"Sains / Teknologi","jawapan":[5,5,5,5,5,5,5,5,4,4,4,5,5,5,5,5,5,5,5,5],"berguna":"","cabaran":"Based on the TECC 2.0 Guidelines (Technology-enabled Collaborative Classroom 2.0), the most useful feature for learning is its lecture-free, collaborative environment designed specifically to promote Higher Order Thinking (HOT) and active participation, rather than passive listening.","cadangan":"Smart board and also PC lecturer on the table need to repair or replacement new one","rating":5},
+{"masa":"2026-04-16 08:48","program":"Diploma Bioteknologi","semester":3,"kursus":"DYB30083 MICROBIOLOGY","bidang":"Sains / Teknologi","jawapan":[5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5],"berguna":"projector","cabaran":"no challenges or difficulties because all perfect","cadangan":"improve pc for the lect","rating":5},
+{"masa":"2026-04-16 08:48","program":"Diploma Bioteknologi","semester":3,"kursus":"DYB30083 MICROBIOLOGY","bidang":"Sains / Teknologi","jawapan":[5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5],"berguna":"smart board","cabaran":"no","cadangan":"repair pc on lecture chair","rating":5},
+{"masa":"2026-04-16 08:48","program":"Diploma Bioteknologi","semester":3,"kursus":"DYB30083 MICROBIOLOGY","bidang":"Sains / Teknologi","jawapan":[5,5,5,5,5,5,3,3,3,3,3,3,3,3,3,3,3,3,5,5],"berguna":"Air conditioning\nLCD PROJECTOR \nSMART BOARD","cabaran":"Lecturer pc problem","cadangan":"Betulkan pc madam","rating":5},
+{"masa":"2026-04-16 08:49","program":"Diploma Bioteknologi","semester":3,"kursus":"DYB30083 MICROBIOLOGY","bidang":"Sains / Teknologi","jawapan":[5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5],"berguna":"smart board","cabaran":"tecc so perfect for study","cadangan":"lecturer desk need new one","rating":5},
+{"masa":"2026-04-16 08:49","program":"Diploma Bioteknologi","semester":3,"kursus":"DYB30083 MICROBIOLOGY","bidang":"Sains / Teknologi","jawapan":[4,4,4,4,4,4,3,3,3,3,3,3,4,5,4,4,4,4,4,4],"berguna":"Projector","cabaran":"","cadangan":"Upgrade or improve pc for letc","rating":5},
+{"masa":"2026-04-16 08:49","program":"Diploma Bioteknologi","semester":3,"kursus":"DYB30083 MICROBIOLOGY","bidang":"Sains / Teknologi","jawapan":[5,5,5,5,4,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5],"berguna":"aircond and projector","cabaran":"lecturer pc","cadangan":"lamp at the back of the class","rating":5},
+{"masa":"2026-06-09 08:48","program":"Diploma Bioteknologi","semester":2,"kursus":"DBM10133 MATHEMATICS FOR TECHNOLOGY","bidang":"Sains / Teknologi","jawapan":[5,5,4,5,4,5,4,5,5,5,4,4,5,5,5,5,5,5,5,5],"berguna":"quizz","cabaran":"none","cadangan":"","rating":5},
+{"masa":"2026-06-09 08:58","program":"Diploma Bioteknologi","semester":2,"kursus":"DBM10133 MATHEMATICS FOR TECHNOLOGY","bidang":"Sains / Teknologi","jawapan":[5,5,4,5,5,5,4,5,4,4,5,5,4,5,5,4,5,4,5,4],"berguna":"Group study","cabaran":"Nothing","cadangan":"Provide a lot of activities for students","rating":5},
+{"masa":"2026-06-09 08:59","program":"Diploma Bioteknologi","semester":2,"kursus":"DBM10133 MATHEMATICS FOR TECHNOLOGY","bidang":"Sains / Teknologi","jawapan":[4,4,4,4,4,4,4,4,4,4,3,4,3,3,4,4,4,4,4,4],"berguna":"The smart board helps learning","cabaran":"None","cadangan":"No suggestion because the system already good","rating":4},
+{"masa":"2026-06-09 09:04","program":"Diploma Bioteknologi","semester":2,"kursus":"DBM10133 MATHEMATICS FOR TECHNOLOGY","bidang":"Sains / Teknologi","jawapan":[4,4,4,4,4,4,4,3,4,3,4,3,2,2,4,4,3,4,4,3],"berguna":"laptop","cabaran":"wifi","cadangan":"faster wifi","rating":3},
+{"masa":"2026-06-09 09:20","program":"Diploma Bioteknologi","semester":2,"kursus":"DBM10133 MATHEMATICS FOR TECHNOLOGY","bidang":"Sains / Teknologi","jawapan":[3,5,4,4,3,4,4,4,3,4,4,4,3,4,4,4,4,4,5,4],"berguna":"Online tools","cabaran":"","cadangan":"","rating":4},
+{"masa":"2026-06-09 09:29","program":"Diploma Bioteknologi","semester":2,"kursus":"DBM10133 MATHEMATICS FOR TECHNOLOGY","bidang":"Sains / Teknologi","jawapan":[4,4,4,4,4,4,3,3,3,4,4,3,4,4,4,4,4,4,3,4],"berguna":"Electronic whiteboard","cabaran":"Nothing yet","cadangan":"","rating":5},
+{"masa":"2026-06-09 09:30","program":"Diploma Bioteknologi","semester":2,"kursus":"DBM10133 MATHEMATICS FOR TECHNOLOGY","bidang":"Sains / Teknologi","jawapan":[4,4,4,4,4,4,4,4,4,4,4,4,2,2,2,2,2,2,5,5],"berguna":"No major difficulties. The system was easy to use and the learning materials were clear and understandable.","cabaran":"Sometimes there was a lot of information to read in a short time.","cadangan":"Add more interactive activities and quizzes to make the learning experience more engaging.","rating":4},
+{"masa":"2026-06-09 09:43","program":"Diploma Sistem Maklumat Perniagaan","semester":3,"kursus":"DPS30153 E-COMMERCE","bidang":"Perdagangan","jawapan":[5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5],"berguna":"","cabaran":"","cadangan":"","rating":5},
+{"masa":"2026-06-09 09:43","program":"Diploma Sistem Maklumat Perniagaan","semester":3,"kursus":"DPS30153 E-COMMERCE","bidang":"Perdagangan","jawapan":[4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4],"berguna":"","cabaran":"","cadangan":"","rating":4},
+{"masa":"2026-06-09 09:45","program":"Diploma Sistem Maklumat Perniagaan","semester":3,"kursus":"DPS30153 E-COMMERCE","bidang":"Perdagangan","jawapan":[3,3,4,4,3,4,5,5,4,4,4,4,4,3,4,4,3,3,3,4],"berguna":"The most useful feature of TECC 2.0 is the easy access to learning materials and interactive activities that help me understand the topics better.","cabaran":"Sometimes the system is slow to load, especially when the internet connection is unstable.","cadangan":"Improve the system speed and user interface to make navigation easier and more efficient.","rating":4},
+{"masa":"2026-06-09 09:46","program":"Diploma Bioteknologi","semester":2,"kursus":"DBM10133 MATHEMATICS FOR TECHNOLOGY","bidang":"Sains / Teknologi","jawapan":[4,4,4,5,4,4,4,3,4,4,4,4,4,5,4,4,4,4,3,4],"berguna":"projector","cabaran":"making group","cadangan":"make ot easu to write in the canvas","rating":4},
+{"masa":"2026-06-09 09:55","program":"Diploma Sistem Maklumat Perniagaan","semester":3,"kursus":"DPS30153 E-COMMERCE","bidang":"Teknologi Maklumat","jawapan":[3,5,3,4,4,3,5,5,5,5,5,5,3,3,4,5,4,5,5,5],"berguna":"","cabaran":"","cadangan":"","rating":null},
+{"masa":"2026-06-09 10:25","program":"Diploma Bioteknologi","semester":2,"kursus":"DBM10133 MATHEMATICS FOR TECHNOLOGY","bidang":"Lain-lain","jawapan":[4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4],"berguna":"The most useful feature of TECC 2.0 for my learning is collaborative learning. It allows me to work with classmates in discussions, problem-solving activities, and group projects. This helps me understand topics better, improve my communication skills, and learn from different perspectives.","cabaran":"The main challenge was coordinating with group members and managing time effectively during collaborative activities. However, it helped me develop better teamwork and communication skills.","cadangan":"One suggestion for improving the TECC 2.0 system is to provide clearer guidelines and examples for activities and assessments. This would help students better understand the requirements, reduce confusion, and improve their overall learning experience.","rating":4},
+{"masa":"2026-06-09 10:39","program":"Diploma Sistem Maklumat Perniagaan","semester":3,"kursus":"DPS30153 E-COMMERCE","bidang":"Perdagangan","jawapan":[5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5],"berguna":"The most useful feature of TeCC 2.0 for my learning in E-Commerce is collaborative learning. It allows me to work with classmates using digital tools to discuss ideas, complete projects, and solve real business problems. This feature improves my communication, teamwork, and problem-solving skills while helping me understand e-commerce concepts more effectively.","cabaran":"One challenge I encountered while using TeCC 2.0 was maintaining a stable internet connection during online activities and discussions. Sometimes, technical issues and limited access to devices made it difficult to participate fully. In addition, managing group collaboration and meeting deadlines could be challenging when team members had different schedules. Despite these difficulties, TeCC 2.0 helped me improve my digital skills and adaptability in learning.","cadangan":"One suggestion for improving the TeCC 2.0 system is to provide a more user-friendly interface with clearer navigation and easier access to learning materials. Adding more interactive features, such as real-time feedback and progress tracking, could also enhance students' learning experience and engagement during future sessions.","rating":5},
+{"masa":"2026-06-09 10:51","program":"Diploma Sistem Maklumat Perniagaan","semester":3,"kursus":"DPS30153 E-COMMERCE","bidang":"Perdagangan","jawapan":[5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5],"berguna":"Easy access to learning materials and assignments anytime.","cabaran":"Sometimes the system is slow or takes time to load.","cadangan":"Improve the system speed and make navigation easier.","rating":5},
+{"masa":"2026-06-09 11:13","program":"Diploma Hortikultur Landskap / Diploma Teknologi Hortikultur Landskap","semester":1,"kursus":"DUE10112 COMMUNICATIVE ENGLISH 1","bidang":"Bahasa / Komunikasi","jawapan":[5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5],"berguna":"","cabaran":"","cadangan":"","rating":4},
+{"masa":"2026-06-09 11:24","program":"Diploma Sistem Maklumat Perniagaan","semester":3,"kursus":"DPS30153 E-COMMERCE","bidang":"Teknologi Maklumat","jawapan":[5,5,5,5,5,5,5,5,5,5,5,5,4,4,4,4,4,4,5,5],"berguna":"","cabaran":"","cadangan":"improve the chair","rating":5},
+{"masa":"2026-06-09 11:36","program":"Diploma Hortikultur Landskap / Diploma Teknologi Hortikultur Landskap","semester":1,"kursus":"DBM10133 MATHEMATICS FOR TECHNOLOGY","bidang":"Sains / Teknologi","jawapan":[5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5],"berguna":"","cabaran":"","cadangan":"","rating":5},
+{"masa":"2026-06-09 11:51","program":"Diploma Sistem Maklumat Perniagaan","semester":3,"kursus":"DPS30153 E-COMMERCE","bidang":"Perdagangan","jawapan":[3,4,4,4,4,4,4,4,4,4,4,4,3,4,4,4,4,4,4,4],"berguna":"","cabaran":"","cadangan":"","rating":5},
+{"masa":"2026-06-09 12:00","program":"Diploma Hortikultur Landskap / Diploma Teknologi Hortikultur Landskap","semester":1,"kursus":"DUE10112 COMMUNICATIVE ENGLISH 1","bidang":"Bahasa / Komunikasi","jawapan":[5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5],"berguna":"-","cabaran":"","cadangan":"","rating":5},
+{"masa":"2026-06-09 12:18","program":"Diploma Sistem Maklumat Perniagaan","semester":3,"kursus":"DPS30153 E-COMMERCE","bidang":"Lain-lain","jawapan":[3,3,3,3,3,3,2,2,2,2,2,2,3,3,3,3,3,3,3,3],"berguna":"","cabaran":"","cadangan":"","rating":4},
+{"masa":"2026-06-09 12:23","program":"Diploma Sistem Maklumat Perniagaan","semester":3,"kursus":"DPS30153 E-COMMERCE","bidang":"Perdagangan","jawapan":[5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5],"berguna":"The projector","cabaran":"Nothing","cadangan":"Nothing","rating":5},
+{"masa":"2026-06-09 12:45","program":"Diploma Bioteknologi","semester":2,"kursus":"DBM10133 MATHEMATICS FOR TECHNOLOGY","bidang":"Lain-lain","jawapan":[5,5,5,4,4,5,4,5,5,5,5,4,4,5,4,4,4,5,5,5],"berguna":"whiteboard yang from projector tu","cabaran":"internet slow","cadangan":"kuatkan wifi","rating":4},
+{"masa":"2026-06-09 12:58","program":"Diploma Sistem Maklumat Perniagaan","semester":3,"kursus":"DPS30153 E-COMMERCE","bidang":"Perdagangan","jawapan":[5,5,5,5,5,5,5,4,4,5,5,5,3,5,4,4,5,5,4,5],"berguna":"Yes","cabaran":"No","cadangan":"No","rating":5},
+{"masa":"2026-06-09 13:03","program":"Diploma Bioteknologi","semester":2,"kursus":"DBM10133 MATHEMATICS FOR TECHNOLOGY","bidang":"Sains / Teknologi","jawapan":[5,4,4,5,4,5,4,4,4,4,4,4,4,5,4,4,4,4,5,5],"berguna":"The projector","cabaran":"None","cadangan":"-","rating":4},
+{"masa":"2026-06-09 13:07","program":"Diploma Hortikultur Landskap / Diploma Teknologi Hortikultur Landskap","semester":1,"kursus":"DUE10112 COMMUNICATIVE ENGLISH 1","bidang":"Bahasa / Komunikasi","jawapan":[5,5,5,5,5,5,3,3,3,3,3,3,3,3,3,3,3,3,3,3],"berguna":"","cabaran":"","cadangan":"","rating":5},
+{"masa":"2026-06-09 14:35","program":"Diploma Sistem Maklumat Perniagaan","semester":3,"kursus":"DPS30153 E-COMMERCE","bidang":"Perdagangan","jawapan":[4,4,4,5,4,5,4,5,4,4,5,5,5,5,5,5,5,5,5,5],"berguna":"The most useful feature of TECC 2.0 is its comfortable learning environment and the availability of teaching facilities that support effective learning.","cabaran":"There were no major difficulties encountered while using TECC 2.0. The learning sessions were conducted smoothly.","cadangan":"More power outlets and improved internet connectivity would further enhance the learning experience in TECC 2.0.","rating":4},
+{"masa":"2026-06-09 16:33","program":"Diploma Hortikultur Landskap / Diploma Teknologi Hortikultur Landskap","semester":1,"kursus":"DBM10133 MATHEMATICS FOR TECHNOLOGY","bidang":"Lain-lain","jawapan":[5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5],"berguna":"The most useful feature is the easy access to learning materials, lecture notes, and video tutorials anytime and anywhere. It also allows me to submit assignments, check grades, and communicate with lecturers quickly, which makes learning much more convenient and organized.","cabaran":"Sometimes the system loads slowly or has connection issues, especially during peak hours when many users are online. Occasionally, some links or files are not accessible, and the interface could be a bit simpler and more user-friendly for new users.","cadangan":"I suggest improving the system's speed and stability, especially during busy times. Also, adding more clear guidelines and video tutorials on how to use all features properly would help students use the system more effectively and confidently.","rating":5},
+{"masa":"2026-06-10 17:17","program":"Diploma Bioteknologi","semester":2,"kursus":"DBM10133 MATHEMATICS FOR TECHNOLOGY","bidang":"Sains / Teknologi","jawapan":[4,4,4,4,4,4,3,3,3,3,3,3,3,3,3,3,3,3,3,3],"berguna":"Interactive Learning Tools: \"The integration of quiz apps and online learning management system (LMS) tools, which make tracking lessons and reviewing course content much easier.\"","cabaran":"Technical/Connection Issues: \"Sometimes experienced unstable internet connectivity or slow loading times when trying to access the online quiz apps and LMS platform during class.\"","cadangan":"To fix internet/connection issues: \"Improve the classroom's Wi-Fi stability and bandwidth to ensure smoother access to the online quiz apps and LMS platforms during lessons.\"","rating":5},
+{"masa":"2026-06-11 14:28","program":"Diploma Hortikultur Landskap / Diploma Teknologi Hortikultur Landskap","semester":1,"kursus":"DUE10112 COMMUNICATIVE ENGLISH 1","bidang":"Bahasa / Komunikasi","jawapan":[5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5],"berguna":"The interactive practice modules and instant feedback feature are the most useful. They let me test my understanding immediately, correct mistakes right away, and reinforce what I've learned, making learning more effective and self-paced.","cabaran":"Occasionally, the system loads slowly or lags when accessing multimedia content or during peak usage times. Also, some navigation menus are a bit confusing, making it hard to find certain materials quickly at first.","cadangan":"Add a clear, organized search bar and a categorized menu so users can find lessons, exercises, and resources faster. Also, optimize the system to run smoother and load faster even during busy periods.","rating":5},
+{"masa":"2026-06-11 14:34","program":"Diploma Hortikultur Landskap / Diploma Teknologi Hortikultur Landskap","semester":1,"kursus":"DUE10112 COMMUNICATIVE ENGLISH 1","bidang":"Bahasa / Komunikasi","jawapan":[5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,3,3],"berguna":"The most useful feature of TECC 2.0 is the easy access to learning materials and course information in one platform, which helps me stay organized and learn more effectively","cabaran":"Sometimes the system is slow to load, especially during peak usage hours, which affects the learning experience","cadangan":"Improve the system performance and loading speed to provide a smoother user experience","rating":5},
+{"masa":"2026-06-11 14:37","program":"Diploma Hortikultur Landskap / Diploma Teknologi Hortikultur Landskap","semester":1,"kursus":"DUE10112 COMMUNICATIVE ENGLISH 1","bidang":"Lain-lain","jawapan":[4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4],"berguna":"easy access to learning materials and activities, which helps me stay organised and learn at my own pace","cabaran":"occasionally, I experienced technical issues such as slow loading times and difficulties accessing certain features, especially when the internet connection was unstable","cadangan":"i would suggest improving the system's performance and user interface to make navigation smoother and more user-friendly for students","rating":5},
+{"masa":"2026-06-11 15:16","program":"Diploma Hortikultur Landskap / Diploma Teknologi Hortikultur Landskap","semester":2,"kursus":"DUE10112 COMMUNICATIVE ENGLISH 1","bidang":"Bahasa / Komunikasi","jawapan":[5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5],"berguna":"","cabaran":"","cadangan":"","rating":5},
+{"masa":"2026-06-11 16:10","program":"Diploma Hortikultur Landskap / Diploma Teknologi Hortikultur Landskap","semester":1,"kursus":"DUE10112 COMMUNICATIVE ENGLISH 1","bidang":"Bahasa / Komunikasi","jawapan":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3],"berguna":"","cabaran":"","cadangan":"","rating":4}
+];
+
+/* Statement groups and labels */
+const STATEMENT_GROUPS = [
+  { key: 'tp', label: 'Teaching Presence',  start: 0, end: 6 },
+  { key: 'sp', label: 'Social Presence',    start: 6, end: 12 },
+  { key: 'cp', label: 'Cognitive Presence', start: 12, end: 18 },
+  { key: 'op', label: 'Overall Perception', start: 18, end: 20 },
+];
+const STATEMENT_LABELS = [
+  'The lecturer clearly explained the learning objectives at the beginning of the lesson.',
+  'The lecturer provided clear instructions for learning activities.',
+  'The lecturer guided discussions and activities effectively.',
+  'The lecturer encouraged students to participate actively in class.',
+  'The lecturer gave timely and useful feedback on my work or answers.',
+  'The use of technology (smart board, LMS, quiz apps) helped the lecturer to explain the lesson clearly.',
+  'I felt comfortable expressing my ideas during class activities.',
+  'I interacted actively with my classmates during discussions or group work.',
+  'Group activities helped me learn from my peers.',
+  'The classroom environment encouraged teamwork and cooperation.',
+  'Online tools (LMS, quizzes, forums, chat) helped me communicate with my classmates.',
+  'I felt a sense of belonging in this class.',
+  'The learning activities helped me understand the lesson better.',
+  'The questions and quizzes made me think about the topic.',
+  'I can apply what I learned to answer questions or solve problems.',
+  'Feedback from the lecturer or quizzes helped me identify my mistakes.',
+  'The learning activities encouraged me to think more deeply about the subject.',
+  'Overall, the lesson improved my understanding of the course content.',
+  'Learning in the TECC classroom is more engaging than in a traditional classroom.',
+  'Overall, I am satisfied with my learning experience in the TECC classroom.',
+];
+const FORM_URL = 'https://forms.gle/aansJRqAPmySyRdaA';
+
+/* Helpers */
+function mean(arr) {
+  if (!arr.length) return null;
+  return arr.reduce((s, v) => s + v, 0) / arr.length;
+}
+function fmt2(v) { return v === null ? '—' : v.toFixed(2); }
+function meanPill(v) {
+  if (v === null) return '';
+  const cls = v >= 4 ? 'mean-high' : v >= 3 ? 'mean-mid' : 'mean-low';
+  return `<span class="mean-pill ${cls}">${v.toFixed(2)}</span>`;
+}
+function isBlankAnswer(s) {
+  if (!s) return true;
+  const t = s.trim().toLowerCase();
+  return t === '' || t === '-' || t === '–' || t === 'tiada' || t === 'none' || t === 'no' || t === 'nothing' || t === 'n/a';
+}
+
+/* ── Main render ── */
+function renderStudentsPage() {
+  const container = document.getElementById('students-content');
+  container.innerHTML = '';
+
+  /* Filter responses to current year */
+  const yearResps = RESPONS.filter(r => r.masa.slice(0, 4) === currentYear);
+
+  /* ── Form link box ── */
+  const linkBox = document.createElement('div');
+  linkBox.className = 'form-link-box';
+  const linkLabel = document.createElement('span');
+  linkLabel.className = 'text-sm font-bold';
+  linkLabel.textContent = 'Buka borang refleksi:';
+  const linkA = document.createElement('a');
+  linkA.href = FORM_URL;
+  linkA.target = '_blank';
+  linkA.rel = 'noopener noreferrer';
+  linkA.className = 'form-link-url';
+  linkA.textContent = FORM_URL;
+  const copyBtn = document.createElement('button');
+  copyBtn.className = 'copy-btn';
+  copyBtn.textContent = 'Salin pautan';
+  copyBtn.addEventListener('click', () => {
+    navigator.clipboard.writeText(FORM_URL).then(() => {
+      copyBtn.textContent = 'Disalin!';
+      copyBtn.classList.add('copied');
+      setTimeout(() => { copyBtn.textContent = 'Salin pautan'; copyBtn.classList.remove('copied'); }, 2000);
+    }).catch(() => {
+      // fallback
+      const ta = document.createElement('textarea');
+      ta.value = FORM_URL;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      copyBtn.textContent = 'Disalin!';
+      copyBtn.classList.add('copied');
+      setTimeout(() => { copyBtn.textContent = 'Salin pautan'; copyBtn.classList.remove('copied'); }, 2000);
+    });
+  });
+  linkBox.appendChild(linkLabel);
+  linkBox.appendChild(linkA);
+  linkBox.appendChild(copyBtn);
+  container.appendChild(linkBox);
+
+  /* No data for this year */
+  if (yearResps.length === 0) {
+    const msg = document.createElement('div');
+    msg.className = 'placeholder';
+    msg.style.paddingTop = '40px';
+    const h = document.createElement('h2');
+    h.textContent = 'Tiada respons untuk ' + currentYear;
+    const p = document.createElement('p');
+    p.textContent = 'Semua 66 respons adalah dari tahun 2026.';
+    msg.appendChild(h);
+    msg.appendChild(p);
+    container.appendChild(msg);
+    return;
+  }
+
+  /* ── Compute stats ── */
+  const allScores = yearResps.flatMap(r => r.jawapan);
+  const overallMean = mean(allScores);
+
+  const ratings = yearResps.map(r => r.rating).filter(r => r !== null);
+  const meanRating = mean(ratings);
+
+  const courses = [...new Set(yearResps.map(r => r.kursus))];
+  const programmes = [...new Set(yearResps.map(r => r.program))];
+
+  // Group means
+  const groupMeans = STATEMENT_GROUPS.map(g => {
+    const vals = yearResps.flatMap(r => r.jawapan.slice(g.start, g.end));
+    return { ...g, mean: mean(vals) };
+  });
+
+  // Statement means
+  const stmtMeans = STATEMENT_LABELS.map((lbl, i) => ({
+    label: lbl,
+    mean: mean(yearResps.map(r => r.jawapan[i]))
+  }));
+
+  // Rating distribution
+  const ratingDist = [1,2,3,4,5].map(v => ({ v, count: ratings.filter(r => r === v).length }));
+
+  /* ── Stat tiles ── */
+  const statRow = document.createElement('div');
+  statRow.className = 'stat-row';
+  [
+    { val: yearResps.length, lbl: 'Respons' },
+    { val: fmt2(overallMean), lbl: 'Min keseluruhan' },
+    { val: fmt2(meanRating), lbl: 'Min penilaian' },
+    { val: courses.length, lbl: 'Kursus' },
+    { val: programmes.length, lbl: 'Program' },
+  ].forEach(s => {
+    const tile = document.createElement('div');
+    tile.className = 'stat-tile';
+    const v = document.createElement('div');
+    v.className = 'stat-tile-val';
+    v.textContent = s.val;
+    const l = document.createElement('div');
+    l.className = 'stat-tile-lbl';
+    l.textContent = s.lbl;
+    tile.appendChild(v);
+    tile.appendChild(l);
+    statRow.appendChild(tile);
+  });
+  container.appendChild(statRow);
+
+  /* ── Course filter ── */
+  let activeCourse = 'all';
+  const filterSection = document.createElement('div');
+  filterSection.className = 'card mb-16';
+  const filterBody = document.createElement('div');
+  filterBody.className = 'card-body';
+  const filterTitle = document.createElement('div');
+  filterTitle.className = 'section-title mb-8';
+  filterTitle.textContent = 'Tapis mengikut kursus';
+  filterBody.appendChild(filterTitle);
+  const filterRow = document.createElement('div');
+  filterRow.className = 'course-filter-row';
+
+  function rebuildStats(filtered) {
+    // update everything that depends on filtered
+    updateGroupMeansSection(filtered);
+    updateStmtMeansSection(filtered);
+    updateOpenAnswers(filtered);
+    updateCourseTable(filtered);
+    updateProgrammeTable(filtered);
+  }
+
+  function makeFilterBtn(label, value) {
+    const btn = document.createElement('button');
+    btn.className = 'filter-btn' + (value === activeCourse ? ' active' : '');
+    btn.textContent = label;
+    btn.addEventListener('click', () => {
+      activeCourse = value;
+      filterRow.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const filtered = value === 'all' ? yearResps : yearResps.filter(r => r.kursus === value);
+      rebuildStats(filtered);
+    });
+    return btn;
+  }
+
+  filterRow.appendChild(makeFilterBtn('Semua', 'all'));
+  courses.forEach(c => filterRow.appendChild(makeFilterBtn(c, c)));
+  filterBody.appendChild(filterRow);
+  filterSection.appendChild(filterBody);
+  container.appendChild(filterSection);
+
+  /* ── Two col: Group means + Rating distribution ── */
+  const twoCol = document.createElement('div');
+  twoCol.className = 'two-col-stats';
+
+  // Group means card
+  const groupCard = document.createElement('div');
+  groupCard.className = 'card';
+  const groupBody = document.createElement('div');
+  groupBody.className = 'card-body';
+  const groupTitle = document.createElement('div');
+  groupTitle.className = 'section-title mb-8';
+  groupTitle.textContent = 'Min mengikut kumpulan';
+  groupBody.appendChild(groupTitle);
+  const groupTableWrap = document.createElement('div');
+  groupTableWrap.id = 'group-means-table';
+  groupBody.appendChild(groupTableWrap);
+  groupCard.appendChild(groupBody);
+
+  // Rating distribution card
+  const ratingCard = document.createElement('div');
+  ratingCard.className = 'card';
+  const ratingBody = document.createElement('div');
+  ratingBody.className = 'card-body';
+  const ratingTitle = document.createElement('div');
+  ratingTitle.className = 'section-title mb-8';
+  ratingTitle.textContent = 'Taburan penilaian pelajar';
+  ratingBody.appendChild(ratingTitle);
+  const ratingBarsWrap = document.createElement('div');
+  ratingBarsWrap.id = 'rating-dist-bars';
+  ratingBody.appendChild(ratingBarsWrap);
+  const ratingNote = document.createElement('div');
+  ratingNote.className = 'text-xs text-muted mt-8';
+  ratingNote.textContent = `${ratings.length} daripada ${yearResps.length} respons ada penilaian.`;
+  ratingBody.appendChild(ratingNote);
+  ratingCard.appendChild(ratingBody);
+
+  twoCol.appendChild(groupCard);
+  twoCol.appendChild(ratingCard);
+  container.appendChild(twoCol);
+
+  // Build initial rating dist (not filtered by course since spec says "mean rating")
+  buildRatingDist(ratingDist, ratingBarsWrap, ratings.length);
+
+  /* ── Statement means ── */
+  const stmtCard = document.createElement('div');
+  stmtCard.className = 'card mb-16';
+  const stmtBody = document.createElement('div');
+  stmtBody.className = 'card-body';
+  const stmtTitle = document.createElement('div');
+  stmtTitle.className = 'section-title mb-8';
+  stmtTitle.textContent = 'Min mengikut pernyataan';
+  stmtBody.appendChild(stmtTitle);
+  const stmtTableWrap = document.createElement('div');
+  stmtTableWrap.id = 'stmt-means-table';
+  stmtBody.appendChild(stmtTableWrap);
+  stmtCard.appendChild(stmtBody);
+  container.appendChild(stmtCard);
+
+  /* ── Course table ── */
+  const courseCard = document.createElement('div');
+  courseCard.className = 'card mb-16';
+  const courseBody = document.createElement('div');
+  courseBody.className = 'card-body';
+  const courseTitle = document.createElement('div');
+  courseTitle.className = 'section-title mb-8';
+  courseTitle.textContent = 'Respons mengikut kursus';
+  courseBody.appendChild(courseTitle);
+  const courseTableWrap = document.createElement('div');
+  courseTableWrap.id = 'course-table';
+  courseBody.appendChild(courseTableWrap);
+  courseCard.appendChild(courseBody);
+  container.appendChild(courseCard);
+
+  /* ── Programme table ── */
+  const progCard = document.createElement('div');
+  progCard.className = 'card mb-16';
+  const progBody = document.createElement('div');
+  progBody.className = 'card-body';
+  const progTitle = document.createElement('div');
+  progTitle.className = 'section-title mb-8';
+  progTitle.textContent = 'Respons mengikut program';
+  progBody.appendChild(progTitle);
+  const progTableWrap = document.createElement('div');
+  progTableWrap.id = 'programme-table';
+  progBody.appendChild(progTableWrap);
+  progCard.appendChild(progBody);
+  container.appendChild(progCard);
+
+  /* ── Open answers ── */
+  const openCard = document.createElement('div');
+  openCard.className = 'card mb-16';
+  const openBody = document.createElement('div');
+  openBody.className = 'card-body';
+  const openTitle = document.createElement('div');
+  openTitle.className = 'section-title mb-8';
+  openTitle.textContent = 'Jawapan terbuka';
+  openBody.appendChild(openTitle);
+  const openWrap = document.createElement('div');
+  openWrap.id = 'open-answers-wrap';
+  openBody.appendChild(openWrap);
+  openCard.appendChild(openBody);
+  container.appendChild(openCard);
+
+  /* Initial build */
+  rebuildStats(yearResps);
+
+  /* ─── update functions ─── */
+  function updateGroupMeansSection(filtered) {
+    const el = document.getElementById('group-means-table');
+    if (!el) return;
+    el.innerHTML = '';
+    const table = document.createElement('table');
+    table.className = 'group-table';
+    const thead = document.createElement('thead');
+    thead.innerHTML = '<tr><th>Kumpulan</th><th>Min</th></tr>';
+    table.appendChild(thead);
+    const tbody = document.createElement('tbody');
+    STATEMENT_GROUPS.forEach(g => {
+      const vals = filtered.flatMap(r => r.jawapan.slice(g.start, g.end));
+      const m = mean(vals);
+      const tr = document.createElement('tr');
+      const tdName = document.createElement('td');
+      tdName.textContent = g.label;
+      const tdMean = document.createElement('td');
+      tdMean.innerHTML = meanPill(m);
+      tr.appendChild(tdName);
+      tr.appendChild(tdMean);
+      tbody.appendChild(tr);
+    });
+    // overall row
+    const allVals = filtered.flatMap(r => r.jawapan);
+    const overallM = mean(allVals);
+    const trAll = document.createElement('tr');
+    trAll.style.fontWeight = '700';
+    const tdN = document.createElement('td');
+    tdN.textContent = 'Keseluruhan';
+    const tdM = document.createElement('td');
+    tdM.innerHTML = meanPill(overallM);
+    trAll.appendChild(tdN);
+    trAll.appendChild(tdM);
+    tbody.appendChild(trAll);
+    table.appendChild(tbody);
+    el.appendChild(table);
+  }
+
+  function updateStmtMeansSection(filtered) {
+    const el = document.getElementById('stmt-means-table');
+    if (!el) return;
+    el.innerHTML = '';
+    const table = document.createElement('table');
+    table.className = 'group-table';
+    const thead = document.createElement('thead');
+    thead.innerHTML = '<tr><th>#</th><th>Pernyataan</th><th>Min</th></tr>';
+    table.appendChild(thead);
+    const tbody = document.createElement('tbody');
+    STATEMENT_GROUPS.forEach(g => {
+      // group header row
+      const trGrp = document.createElement('tr');
+      trGrp.style.background = 'var(--surface)';
+      const tdGrp = document.createElement('td');
+      tdGrp.colSpan = 3;
+      tdGrp.style.fontWeight = '700';
+      tdGrp.style.fontSize = '12px';
+      tdGrp.style.color = 'var(--muted)';
+      tdGrp.textContent = g.label;
+      trGrp.appendChild(tdGrp);
+      tbody.appendChild(trGrp);
+
+      for (let i = g.start; i < g.end; i++) {
+        const vals = filtered.map(r => r.jawapan[i]);
+        const m = mean(vals);
+        const tr = document.createElement('tr');
+        const tdNum = document.createElement('td');
+        tdNum.textContent = i + 1;
+        tdNum.style.color = 'var(--muted)';
+        tdNum.style.fontSize = '12px';
+        const tdLbl = document.createElement('td');
+        tdLbl.textContent = STATEMENT_LABELS[i];
+        tdLbl.style.fontSize = '12px';
+        const tdMean = document.createElement('td');
+        tdMean.style.whiteSpace = 'nowrap';
+        tdMean.innerHTML = meanPill(m);
+        tr.appendChild(tdNum);
+        tr.appendChild(tdLbl);
+        tr.appendChild(tdMean);
+        tbody.appendChild(tr);
+      }
+    });
+    table.appendChild(tbody);
+    el.appendChild(table);
+  }
+
+  function updateOpenAnswers(filtered) {
+    const el = document.getElementById('open-answers-wrap');
+    if (!el) return;
+    el.innerHTML = '';
+    const cats = [
+      { field: 'berguna', title: 'Ciri paling berguna' },
+      { field: 'cabaran', title: 'Cabaran yang dihadapi' },
+      { field: 'cadangan', title: 'Cadangan penambahbaikan' },
+    ];
+    cats.forEach(cat => {
+      const answers = filtered.map(r => r[cat.field]).filter(s => !isBlankAnswer(s));
+      if (answers.length === 0) return;
+      const sec = document.createElement('div');
+      sec.className = 'open-answers-section';
+      const ttl = document.createElement('div');
+      ttl.className = 'font-bold text-sm mb-8';
+      ttl.textContent = `${cat.title} (${answers.length})`;
+      sec.appendChild(ttl);
+      answers.forEach(ans => {
+        const item = document.createElement('div');
+        item.className = 'open-answer-item';
+        item.textContent = ans;
+        sec.appendChild(item);
+      });
+      el.appendChild(sec);
+    });
+    if (el.innerHTML === '') {
+      const msg = document.createElement('div');
+      msg.className = 'text-muted text-sm';
+      msg.textContent = 'Tiada jawapan terbuka untuk penapis ini.';
+      el.appendChild(msg);
+    }
+  }
+
+  function updateCourseTable(filtered) {
+    const el = document.getElementById('course-table');
+    if (!el) return;
+    el.innerHTML = '';
+    const table = document.createElement('table');
+    table.className = 'group-table';
+    const thead = document.createElement('thead');
+    thead.innerHTML = '<tr><th>Kursus</th><th>Respons</th><th>Min</th></tr>';
+    table.appendChild(thead);
+    const tbody = document.createElement('tbody');
+    const coursesInFilter = [...new Set(filtered.map(r => r.kursus))].sort();
+    coursesInFilter.forEach(c => {
+      const cResps = filtered.filter(r => r.kursus === c);
+      const m = mean(cResps.flatMap(r => r.jawapan));
+      const tr = document.createElement('tr');
+      const tdC = document.createElement('td');
+      tdC.textContent = c;
+      const tdN = document.createElement('td');
+      tdN.textContent = cResps.length;
+      const tdM = document.createElement('td');
+      tdM.innerHTML = meanPill(m);
+      tr.appendChild(tdC);
+      tr.appendChild(tdN);
+      tr.appendChild(tdM);
+      tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+    el.appendChild(table);
+  }
+
+  function updateProgrammeTable(filtered) {
+    const el = document.getElementById('programme-table');
+    if (!el) return;
+    el.innerHTML = '';
+    const table = document.createElement('table');
+    table.className = 'group-table';
+    const thead = document.createElement('thead');
+    thead.innerHTML = '<tr><th>Program</th><th>Respons</th><th>Min</th></tr>';
+    table.appendChild(thead);
+    const tbody = document.createElement('tbody');
+    const progsInFilter = [...new Set(filtered.map(r => r.program))].sort();
+    progsInFilter.forEach(p => {
+      const pResps = filtered.filter(r => r.program === p);
+      const m = mean(pResps.flatMap(r => r.jawapan));
+      const tr = document.createElement('tr');
+      const tdP = document.createElement('td');
+      tdP.textContent = p;
+      const tdN = document.createElement('td');
+      tdN.textContent = pResps.length;
+      const tdM = document.createElement('td');
+      tdM.innerHTML = meanPill(m);
+      tr.appendChild(tdP);
+      tr.appendChild(tdN);
+      tr.appendChild(tdM);
+      tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+    el.appendChild(table);
+  }
+}
+
+function buildRatingDist(ratingDist, container, total) {
+  container.innerHTML = '';
+  const maxCount = Math.max(...ratingDist.map(d => d.count), 1);
+  [5,4,3,2,1].forEach(v => {
+    const d = ratingDist.find(x => x.v === v) || { v, count: 0 };
+    const row = document.createElement('div');
+    row.className = 'rating-bar-row';
+    const lbl = document.createElement('span');
+    lbl.style.width = '24px';
+    lbl.style.textAlign = 'right';
+    lbl.textContent = v + '★';
+    const track = document.createElement('div');
+    track.className = 'rating-bar-track';
+    const fill = document.createElement('div');
+    fill.className = 'rating-bar-fill';
+    fill.style.width = total > 0 ? (d.count / total * 100) + '%' : '0%';
+    track.appendChild(fill);
+    const cnt = document.createElement('div');
+    cnt.className = 'rating-bar-count';
+    cnt.textContent = d.count;
+    row.appendChild(lbl);
+    row.appendChild(track);
+    row.appendChild(cnt);
+    container.appendChild(row);
+  });
+}
+
+/* ═══════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════
+   DASHBOARD PAGE
+═══════════════════════════════════════════════ */
+function renderDashboardPage() {
+  const container = document.getElementById('dashboard-content');
+  container.innerHTML = '';
+
+  const yd = getYearData(currentYear);
+  const marks = getMarks(currentYear);
+  const { overall, stars, elementScores, anyMarked } = computeScore(marks);
+  const utilPct = computeUtility(currentYear);
+
+  /* ── Export / Import bar ── */
+  const ioBar = document.createElement('div');
+  ioBar.className = 'io-bar';
+
+  const exportBtn = document.createElement('button');
+  exportBtn.className = 'btn btn-secondary';
+  exportBtn.textContent = 'Eksport data';
+  exportBtn.addEventListener('click', exportData);
+
+  const importBtn = document.createElement('button');
+  importBtn.className = 'btn btn-secondary';
+  importBtn.textContent = 'Import data';
+  const importInput = document.createElement('input');
+  importInput.type = 'file';
+  importInput.accept = '.json';
+  importInput.style.display = 'none';
+  importInput.setAttribute('aria-hidden', 'true');
+  importBtn.addEventListener('click', () => importInput.click());
+  importInput.addEventListener('change', () => importData(importInput));
+
+  const ioMsg = document.createElement('span');
+  ioMsg.id = 'io-msg';
+  ioMsg.className = 'text-sm text-muted';
+
+  ioBar.appendChild(exportBtn);
+  ioBar.appendChild(importBtn);
+  ioBar.appendChild(importInput);
+  ioBar.appendChild(ioMsg);
+  container.appendChild(ioBar);
+
+  /* ── Banner ── */
+  const banner = document.createElement('div');
+  banner.className = 'dash-banner';
+
+  const bl = document.createElement('div');
+  bl.className = 'dash-banner-left';
+
+  const tag = document.createElement('div');
+  tag.className = 'dash-banner-tag';
+  tag.textContent = `STAR RATING ${currentYear}`;
+
+  const scoreEl = document.createElement('div');
+  scoreEl.className = 'dash-banner-score';
+  if (!anyMarked) {
+    scoreEl.textContent = '—';
+  } else {
+    const num = document.createElement('span');
+    num.textContent = overall;
+    const den = document.createElement('span');
+    den.className = 'dash-banner-denom';
+    den.textContent = ' / 100';
+    scoreEl.appendChild(num);
+    scoreEl.appendChild(den);
+  }
+
+  const msg = document.createElement('div');
+  msg.className = 'dash-banner-msg';
+  msg.textContent = anyMarked ? nextStarMsg(overall, stars) : '0 daripada 17 item dinilai.';
+
+  const goBtn = document.createElement('button');
+  goBtn.className = 'dash-banner-btn';
+  goBtn.textContent = 'Isi penilaian';
+  goBtn.addEventListener('click', () => navigateTo('starrating'));
+
+  bl.appendChild(tag);
+  bl.appendChild(scoreEl);
+  bl.appendChild(msg);
+  bl.appendChild(goBtn);
+
+  const br = document.createElement('div');
+  br.className = 'dash-banner-right';
+
+  const starsRow = document.createElement('div');
+  starsRow.className = 'dash-stars-row';
+  starsRow.setAttribute('aria-label', anyMarked ? `${stars} bintang` : 'Tiada bintang');
+  for (let i = 1; i <= 5; i++) {
+    const s = document.createElement('span');
+    s.className = 'dash-star ' + (anyMarked && i <= stars ? 'filled' : 'empty');
+    s.setAttribute('aria-hidden', 'true');
+    s.textContent = '★';
+    starsRow.appendChild(s);
+  }
+
+  const starsSub = document.createElement('div');
+  starsSub.className = 'dash-stars-sub';
+  const assessedCount = Object.values(marks).filter(v => v !== null).length;
+  starsSub.textContent = `${assessedCount} / 17 item dinilai`;
+
+  br.appendChild(starsRow);
+  br.appendChild(starsSub);
+
+  banner.appendChild(bl);
+  banner.appendChild(br);
+  container.appendChild(banner);
+
+  /* ── 4 Stat cards ── */
+  // Utility %
+  const utilStr = utilPct !== null ? utilPct.toFixed(1) + '%' : '—';
+  const utilOnTarget = utilPct !== null && utilPct >= 75 && utilPct <= 80;
+  const utilBelow = utilPct !== null && utilPct < 75;
+
+  // Activities count
+  const actCount = yd.activities.length;
+
+  // Maintenance records
+  const maintCount = yd.maintenance.length;
+
+  // Items with evidence (at least 1 image)
+  let itemsWithEvidence = 0;
+  ELEMENTS.forEach(el => el.items.forEach(it => {
+    if ((yd.items[it.id]?.images || []).length > 0) itemsWithEvidence++;
+  }));
+  const allHaveEvidence = itemsWithEvidence === 17;
+
+  const statCards = [
+    {
+      icon: '⏱',
+      val: utilStr,
+      tag: utilPct !== null ? `Kadar utiliti (${Math.round(yd.utility.monthly.reduce((s,v)=>s+(v!==''?Number(v):0),0) || Number(yd.utility.hoursUsed)||0)} / ${Number(yd.utility.hoursAvailable)||0} jam)` : 'Kadar utiliti',
+      badge: utilPct !== null ? (utilOnTarget ? { text: 'Dalam sasaran', cls: 'badge-green' } : utilBelow ? { text: 'Bawah sasaran', cls: 'badge-orange' } : null) : null,
+    },
+    {
+      icon: '📅',
+      val: actCount,
+      tag: 'Aktiviti TeCC',
+      badge: null,
+    },
+    {
+      icon: '🔧',
+      val: maintCount,
+      tag: 'Rekod penyelenggaraan',
+      badge: null,
+    },
+    {
+      icon: '✅',
+      val: `${itemsWithEvidence} / 17`,
+      tag: 'Item ada bukti',
+      badge: allHaveEvidence ? { text: 'Lengkap', cls: 'badge-green' } : null,
+    },
+  ];
+
+  const cardsRow = document.createElement('div');
+  cardsRow.className = 'stat-cards';
+  statCards.forEach(sc => {
+    const card = document.createElement('div');
+    card.className = 'stat-card';
+    const icon = document.createElement('div');
+    icon.className = 'stat-card-icon';
+    icon.setAttribute('aria-hidden', 'true');
+    icon.textContent = sc.icon;
+    const val = document.createElement('div');
+    val.className = 'stat-card-val';
+    val.textContent = sc.val;
+    if (sc.badge) {
+      const badge = document.createElement('span');
+      badge.className = 'stat-card-badge ' + sc.badge.cls;
+      badge.textContent = sc.badge.text;
+      val.appendChild(badge);
+    }
+    const tag = document.createElement('div');
+    tag.className = 'stat-card-tag';
+    tag.textContent = sc.tag;
+    card.appendChild(icon);
+    card.appendChild(val);
+    card.appendChild(tag);
+    cardsRow.appendChild(card);
+  });
+  container.appendChild(cardsRow);
+
+  /* ── Main grid: Activity chart  |  Element scores ── */
+  const dashGrid = document.createElement('div');
+  dashGrid.className = 'dash-grid mb-20';
+
+  /* Activity chart card */
+  const actCard = document.createElement('div');
+  actCard.className = 'card';
+  const actBody = document.createElement('div');
+  actBody.className = 'card-body';
+  const actTitle = document.createElement('div');
+  actTitle.className = 'section-title mb-8';
+  actTitle.textContent = `Aktiviti TeCC ${currentYear}`;
+  actBody.appendChild(actTitle);
+  actBody.appendChild(buildActivityChart(yd.activities));
+  actCard.appendChild(actBody);
+
+  /* Element scores card */
+  const elemCard = document.createElement('div');
+  elemCard.className = 'card';
+  const elemBody = document.createElement('div');
+  elemBody.className = 'card-body';
+  const elemTitle = document.createElement('div');
+  elemTitle.className = 'section-title mb-8';
+  elemTitle.textContent = 'Skor ikut elemen';
+  // legend
+  const legend = document.createElement('div');
+  legend.style.cssText = 'display:flex;gap:12px;font-size:11px;color:var(--muted);margin-bottom:12px;flex-wrap:wrap;';
+  [['var(--accent2)', 'Diperoleh'], ['var(--hatch)', 'Belum dinilai'], ['var(--border)', 'Hilang']].forEach(([bg, lbl]) => {
+    const item = document.createElement('div');
+    item.style.cssText = 'display:flex;align-items:center;gap:4px;';
+    const dot = document.createElement('span');
+    dot.style.cssText = `width:10px;height:10px;border-radius:2px;background:${bg};display:inline-block;flex-shrink:0;`;
+    const txt = document.createTextNode(lbl);
+    item.appendChild(dot);
+    item.appendChild(txt);
+    legend.appendChild(item);
+  });
+  elemBody.appendChild(elemTitle);
+  elemBody.appendChild(legend);
+
+  elementScores.forEach((es, idx) => {
+    const el = ELEMENTS[idx];
+    const row = document.createElement('div');
+    row.className = 'elem-score-row';
+
+    const labelRow = document.createElement('div');
+    labelRow.className = 'elem-score-label';
+    const nameSpan = document.createElement('span');
+    nameSpan.textContent = es.name;
+    const pctSpan = document.createElement('span');
+    pctSpan.className = 'elem-score-pct';
+    pctSpan.textContent = `${(el.weight*100).toFixed(0)}%`;
+    labelRow.appendChild(nameSpan);
+    labelRow.appendChild(pctSpan);
+
+    const scoreNum = document.createElement('div');
+    scoreNum.style.cssText = 'font-size:22px;font-weight:800;line-height:1;margin-bottom:4px;';
+    scoreNum.textContent = anyMarked ? es.pct100.toFixed(0) : '—';
+    if (anyMarked) {
+      const d = document.createElement('span');
+      d.style.cssText = 'font-size:13px;font-weight:400;color:var(--muted);';
+      d.textContent = ' / 100';
+      scoreNum.appendChild(d);
+    }
+
+    const barWrap = document.createElement('div');
+    barWrap.className = 'elem-bar-wrap';
+    barWrap.setAttribute('role', 'img');
+    const earnedPct = (es.earned / es.maxPossible) * 100;
+    const unPct = (es.unassessed / es.maxPossible) * 100;
+    const lostPct = 100 - earnedPct - unPct;
+    if (earnedPct > 0) { const b = document.createElement('div'); b.className = 'elem-bar-earned'; b.style.width = earnedPct + '%'; barWrap.appendChild(b); }
+    if (unPct > 0)     { const b = document.createElement('div'); b.className = 'elem-bar-unassessed'; b.style.width = unPct + '%'; barWrap.appendChild(b); }
+    if (lostPct > 0.01){ const b = document.createElement('div'); b.className = 'elem-bar-lost'; b.style.width = lostPct + '%'; barWrap.appendChild(b); }
+
+    const subText = document.createElement('div');
+    subText.style.cssText = 'font-size:11px;color:var(--muted);margin-top:2px;';
+    const contrib = (es.earned / es.maxPossible * 100 * es.weight).toFixed(1);
+    const unContrib = (es.unassessed / es.maxPossible * 100 * es.weight).toFixed(1);
+    subText.textContent = `Sumbang ${contrib} daripada ${(es.weight*100).toFixed(0)} mata · ${unContrib} mata belum dinilai`;
+
+    row.appendChild(labelRow);
+    row.appendChild(scoreNum);
+    row.appendChild(barWrap);
+    row.appendChild(subText);
+    elemBody.appendChild(row);
+  });
+  elemCard.appendChild(elemBody);
+
+  dashGrid.appendChild(actCard);
+  dashGrid.appendChild(elemCard);
+  container.appendChild(dashGrid);
+
+  /* ── Recent evidence ── */
+  const allImages = [];
+  ELEMENTS.forEach(el => {
+    el.items.forEach(it => {
+      (yd.items[it.id]?.images || []).forEach(img => {
+        allImages.push({ ...img, itemId: it.id, itemName: it.name });
+      });
+    });
+  });
+  // Sort by date desc (date is a string "YYYY-MM-DD HH:MM")
+  allImages.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+  const recent = allImages.slice(0, 6);
+
+  const recentCard = document.createElement('div');
+  recentCard.className = 'card';
+  const recentBody = document.createElement('div');
+  recentBody.className = 'card-body';
+  const recentHeader = document.createElement('div');
+  recentHeader.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;';
+  const recentTitle = document.createElement('div');
+  recentTitle.className = 'section-title';
+  recentTitle.style.marginBottom = '0';
+  recentTitle.textContent = 'Bukti terkini';
+  const seeAllBtn = document.createElement('button');
+  seeAllBtn.className = 'btn btn-secondary btn-sm';
+  seeAllBtn.textContent = 'Lihat semua';
+  seeAllBtn.addEventListener('click', () => navigateTo('galeri'));
+  recentHeader.appendChild(recentTitle);
+  recentHeader.appendChild(seeAllBtn);
+  recentBody.appendChild(recentHeader);
+
+  if (recent.length === 0) {
+    const empty = document.createElement('div');
+    empty.style.cssText = 'text-align:center;color:var(--muted);padding:24px;font-size:13px;';
+    empty.textContent = 'Tiada bukti dimuat naik lagi.';
+    recentBody.appendChild(empty);
+  } else {
+    const grid = document.createElement('div');
+    grid.className = 'recent-evidence-grid';
+    recent.forEach(img => {
+      const card = document.createElement('div');
+      card.className = 'recent-card';
+      card.setAttribute('role', 'button');
+      card.setAttribute('tabindex', '0');
+      card.setAttribute('aria-label', img.itemName);
+      const imgEl = document.createElement('img');
+      imgEl.src = img.dataUrl;
+      imgEl.alt = img.note || img.itemName;
+      imgEl.loading = 'lazy';
+      const meta = document.createElement('div');
+      meta.className = 'recent-card-meta';
+      const strong = document.createElement('strong');
+      strong.textContent = `${img.itemId}. ${img.itemName}`;
+      const line2 = document.createElement('span');
+      line2.textContent = (img.uploader || '—') + ' · ' + (img.date || '').slice(0, 10);
+      meta.appendChild(strong);
+      meta.appendChild(document.createElement('br'));
+      meta.appendChild(line2);
+      card.appendChild(imgEl);
+      card.appendChild(meta);
+      const open = () => openImageModal(img, img.itemId, null);
+      card.addEventListener('click', open);
+      card.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') open(); });
+      grid.appendChild(card);
+    });
+    recentBody.appendChild(grid);
+  }
+  recentCard.appendChild(recentBody);
+  container.appendChild(recentCard);
+}
+
+/* ── Activity bar chart (inline SVG) ── */
+function buildActivityChart(activities) {
+  const wrap = document.createElement('div');
+  wrap.className = 'chart-wrap';
+
+  // Count per month 0-11
+  const counts = Array(12).fill(0);
+  let noDateCount = 0;
+  activities.forEach(a => {
+    if (!a.date) { noDateCount++; return; }
+    const m = parseInt(a.date.slice(5, 7), 10) - 1;
+    if (m >= 0 && m < 12) counts[m]++;
+    else noDateCount++;
+  });
+
+  const maxCount = Math.max(...counts, 1);
+  const W = 520, H = 160, padL = 24, padB = 28, padT = 16, padR = 8;
+  const chartW = W - padL - padR;
+  const chartH = H - padB - padT;
+  const barW = Math.floor(chartW / 12) - 4;
+
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  svg.setAttribute('width', '100%');
+  svg.setAttribute('aria-label', 'Carta bar aktiviti bulanan');
+  svg.setAttribute('role', 'img');
+  svg.style.maxWidth = W + 'px';
+
+  // Grid lines
+  const gridVals = maxCount <= 2 ? [0,1,2] : [0, Math.round(maxCount/2), maxCount];
+  gridVals.forEach(v => {
+    const y = padT + chartH - (v / maxCount) * chartH;
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line.setAttribute('x1', padL); line.setAttribute('x2', W - padR);
+    line.setAttribute('y1', y); line.setAttribute('y2', y);
+    line.setAttribute('stroke', 'var(--border)');
+    line.setAttribute('stroke-width', '1');
+    svg.appendChild(line);
+    const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    txt.setAttribute('x', padL - 3); txt.setAttribute('y', y + 4);
+    txt.setAttribute('text-anchor', 'end');
+    txt.setAttribute('font-size', '9');
+    txt.setAttribute('fill', 'var(--muted)');
+    txt.textContent = v;
+    svg.appendChild(txt);
+  });
+
+  // Bars + month labels
+  counts.forEach((cnt, i) => {
+    const x = padL + i * (chartW / 12) + 2;
+    const barH = cnt === 0 ? 0 : Math.max(4, (cnt / maxCount) * chartH);
+    const y = padT + chartH - barH;
+
+    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    rect.setAttribute('x', x); rect.setAttribute('y', y);
+    rect.setAttribute('width', barW); rect.setAttribute('height', barH);
+    rect.setAttribute('fill', 'var(--accent2)');
+    rect.setAttribute('rx', '3');
+    rect.setAttribute('aria-label', `${MONTHS_BM[i]}: ${cnt}`);
+    svg.appendChild(rect);
+
+    const lbl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    lbl.setAttribute('x', x + barW / 2); lbl.setAttribute('y', H - 6);
+    lbl.setAttribute('text-anchor', 'middle');
+    lbl.setAttribute('font-size', '9');
+    lbl.setAttribute('fill', 'var(--muted)');
+    lbl.textContent = MONTHS_BM[i];
+    svg.appendChild(lbl);
+  });
+
+  wrap.appendChild(svg);
+
+  if (noDateCount > 0) {
+    const note = document.createElement('div');
+    note.className = 'text-xs text-muted mt-4';
+    note.textContent = `${noDateCount} aktiviti tiada tarikh, jadi tak masuk dalam carta.`;
+    wrap.appendChild(note);
+  }
+
+  if (activities.length === 0) {
+    const note = document.createElement('div');
+    note.className = 'text-xs text-muted mt-4';
+    note.textContent = 'Tiada aktiviti direkodkan lagi.';
+    wrap.appendChild(note);
+  }
+
+  return wrap;
+}
+
+/* ═══════════════════════════════════════════════
+   EXPORT / IMPORT
+═══════════════════════════════════════════════ */
+function exportData() {
+  try {
+    const json = JSON.stringify(appData, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `tecc-pns-data-${new Date().toISOString().slice(0,10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showIoMsg('Data berjaya dieksport.');
+  } catch(e) {
+    showIoMsg('Gagal eksport: ' + e.message, true);
+  }
+}
+
+function importData(fileInput) {
+  const file = fileInput.files[0];
+  if (!file) return;
+  fileInput.value = '';
+  const reader = new FileReader();
+  reader.onerror = () => showIoMsg('Gagal baca fail.', true);
+  reader.onload = e => {
+    try {
+      const parsed = JSON.parse(e.target.result);
+      // basic validation: must have at least one year key
+      const years = ['2024','2025','2026','2027'];
+      const hasYear = years.some(y => y in parsed);
+      if (!hasYear) throw new Error('Fail JSON tidak sah – tiada data tahun yang dikenali.');
+      // merge in: keep existing years not in file, override those that are
+      years.forEach(y => {
+        if (parsed[y]) appData[y] = parsed[y];
+      });
+      saveData();
+      showIoMsg('Import berjaya! Data dikemas kini.');
+      renderActivePage();
+    } catch(err) {
+      showIoMsg('Import gagal: ' + err.message, true);
+    }
+  };
+  reader.readAsText(file);
+}
+
+function showIoMsg(msg, isError = false) {
+  const el = document.getElementById('io-msg');
+  if (!el) return;
+  el.textContent = msg;
+  el.style.color = isError ? 'var(--red)' : 'var(--green)';
+  setTimeout(() => { el.textContent = ''; }, 5000);
+}
+
+/* ═══════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════ */
+function init() {
+  buildNav();
+  buildYearTabs();
+
+  // Wire modal close buttons
+  document.getElementById('modal-close-btn').addEventListener('click', closeImageModal);
+  document.getElementById('modal-close-btn2').addEventListener('click', closeImageModal);
+  document.getElementById('img-modal').addEventListener('click', e => {
+    if (e.target === document.getElementById('img-modal')) closeImageModal();
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeImageModal();
+  });
+
+  navigateTo('dashboard');
+}
+
+init();
+</script>
+</body>
+</html>
